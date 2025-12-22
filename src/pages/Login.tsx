@@ -1,18 +1,48 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
+import { useAuth } from '@/hooks/useAuth';
+import { toast } from '@/hooks/use-toast';
 
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const { signIn, user } = useAuth();
+  const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  useEffect(() => {
+    if (user) {
+      navigate('/profile');
+    }
+  }, [user, navigate]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle login
-    console.log('Login:', { email, password });
+    setLoading(true);
+
+    const { error } = await signIn(email, password);
+
+    if (error) {
+      toast({
+        title: 'خطا در ورود',
+        description: error.message === 'Invalid login credentials' 
+          ? 'ایمیل یا رمز عبور اشتباه است'
+          : error.message,
+        variant: 'destructive'
+      });
+    } else {
+      toast({
+        title: 'خوش آمدید!',
+        description: 'با موفقیت وارد شدید'
+      });
+      navigate('/profile');
+    }
+
+    setLoading(false);
   };
 
   return (
@@ -65,18 +95,8 @@ const Login = () => {
                 </div>
               </div>
 
-              <div className="flex items-center justify-between text-sm">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input type="checkbox" className="w-4 h-4 rounded border-border bg-secondary" />
-                  <span className="text-muted-foreground">مرا به خاطر بسپار</span>
-                </label>
-                <Link to="/forgot-password" className="text-primary hover:underline">
-                  فراموشی رمز عبور
-                </Link>
-              </div>
-
-              <Button variant="gradient" className="w-full" size="lg" type="submit">
-                ورود
+              <Button variant="gradient" className="w-full" size="lg" type="submit" disabled={loading}>
+                {loading ? 'در حال ورود...' : 'ورود'}
               </Button>
             </form>
 
