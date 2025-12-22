@@ -1,0 +1,152 @@
+import { useState } from 'react';
+import { Link } from 'react-router-dom';
+import { ChevronDown, Menu, X, User, Image, BookOpen, Calendar, LogIn } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+
+const Navbar = () => {
+  const [isOpen, setIsOpen] = useState(false);
+
+  const navItems = [
+    { label: 'گالری', href: '/gallery', icon: Image },
+    {
+      label: 'دوره‌ها',
+      icon: BookOpen,
+      children: [
+        { label: 'کارگاه', href: '/courses/workshop' },
+        { label: 'وبینار', href: '/courses/webinar' },
+        { label: 'آموزش', href: '/courses/training' },
+      ],
+    },
+    { label: 'برنامه‌ها و زمانبندی', href: '/schedule', icon: Calendar },
+    {
+      label: 'ثبت نام و ورود',
+      icon: LogIn,
+      children: [
+        { label: 'ورود', href: '/login' },
+        { label: 'ثبت نام', href: '/register' },
+        { label: 'پروفایل', href: '/profile' },
+      ],
+    },
+  ];
+
+  return (
+    <nav className="fixed top-0 right-0 left-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border">
+      <div className="container mx-auto px-4">
+        <div className="flex items-center justify-between h-16">
+          {/* Logo */}
+          <Link to="/" className="flex items-center gap-2">
+            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center">
+              <span className="text-primary-foreground font-bold text-lg">ME</span>
+            </div>
+            <span className="hidden sm:block text-lg font-bold gradient-text">میکروالکترونیک</span>
+          </Link>
+
+          {/* Desktop Navigation */}
+          <div className="hidden lg:flex items-center gap-1">
+            {navItems.map((item) =>
+              item.children ? (
+                <DropdownMenu key={item.label}>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className="gap-1">
+                      <item.icon className="w-4 h-4" />
+                      {item.label}
+                      <ChevronDown className="w-4 h-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="bg-popover border-border">
+                    {item.children.map((child) => (
+                      <DropdownMenuItem key={child.label} asChild>
+                        <Link to={child.href} className="cursor-pointer">
+                          {child.label}
+                        </Link>
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : (
+                <Button key={item.label} variant="ghost" asChild>
+                  <Link to={item.href} className="gap-1">
+                    <item.icon className="w-4 h-4" />
+                    {item.label}
+                  </Link>
+                </Button>
+              )
+            )}
+          </div>
+
+          {/* CTA Button */}
+          <div className="hidden lg:block">
+            <Button variant="neon" asChild>
+              <Link to="/courses">خرید دوره‌ها</Link>
+            </Button>
+          </div>
+
+          {/* Mobile Menu Button */}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="lg:hidden"
+            onClick={() => setIsOpen(!isOpen)}
+          >
+            {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+          </Button>
+        </div>
+
+        {/* Mobile Navigation */}
+        {isOpen && (
+          <div className="lg:hidden py-4 border-t border-border animate-fade-in">
+            <div className="flex flex-col gap-2">
+              {navItems.map((item) =>
+                item.children ? (
+                  <div key={item.label} className="space-y-1">
+                    <div className="flex items-center gap-2 px-4 py-2 text-muted-foreground">
+                      <item.icon className="w-4 h-4" />
+                      {item.label}
+                    </div>
+                    <div className="pr-8 space-y-1">
+                      {item.children.map((child) => (
+                        <Link
+                          key={child.label}
+                          to={child.href}
+                          className="block px-4 py-2 text-foreground hover:bg-secondary rounded-lg transition-colors"
+                          onClick={() => setIsOpen(false)}
+                        >
+                          {child.label}
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <Link
+                    key={item.label}
+                    to={item.href}
+                    className="flex items-center gap-2 px-4 py-2 text-foreground hover:bg-secondary rounded-lg transition-colors"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    <item.icon className="w-4 h-4" />
+                    {item.label}
+                  </Link>
+                )
+              )}
+              <div className="pt-4 px-4">
+                <Button variant="neon" className="w-full" asChild>
+                  <Link to="/courses" onClick={() => setIsOpen(false)}>
+                    خرید دوره‌ها
+                  </Link>
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </nav>
+  );
+};
+
+export default Navbar;
