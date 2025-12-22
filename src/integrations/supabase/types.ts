@@ -14,7 +14,99 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      certificates: {
+        Row: {
+          certificate_url: string | null
+          id: string
+          issued_at: string
+          title: string
+          user_id: string
+        }
+        Insert: {
+          certificate_url?: string | null
+          id?: string
+          issued_at?: string
+          title: string
+          user_id: string
+        }
+        Update: {
+          certificate_url?: string | null
+          id?: string
+          issued_at?: string
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          education_level: string | null
+          field_of_study: string | null
+          full_name: string | null
+          gender: string | null
+          id: string
+          national_id: string | null
+          phone: string | null
+          residence: string | null
+          university: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          education_level?: string | null
+          field_of_study?: string | null
+          full_name?: string | null
+          gender?: string | null
+          id?: string
+          national_id?: string | null
+          phone?: string | null
+          residence?: string | null
+          university?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          education_level?: string | null
+          field_of_study?: string | null
+          full_name?: string | null
+          gender?: string | null
+          id?: string
+          national_id?: string | null
+          phone?: string | null
+          residence?: string | null
+          university?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      proposals: {
+        Row: {
+          file_name: string
+          file_url: string
+          id: string
+          uploaded_at: string
+          user_id: string
+        }
+        Insert: {
+          file_name: string
+          file_url: string
+          id?: string
+          uploaded_at?: string
+          user_id: string
+        }
+        Update: {
+          file_name?: string
+          file_url?: string
+          id?: string
+          uploaded_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

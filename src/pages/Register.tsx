@@ -1,27 +1,76 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { Mail, Lock, Eye, EyeOff, User, Phone } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
+import { useAuth } from '@/hooks/useAuth';
+import { toast } from '@/hooks/use-toast';
 
 const Register = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
-    name: '',
     email: '',
-    phone: '',
     password: '',
     confirmPassword: '',
   });
+  const [loading, setLoading] = useState(false);
+  const { signUp, user } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (user) {
+      navigate('/profile');
+    }
+  }, [user, navigate]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle registration
-    console.log('Register:', formData);
+
+    if (formData.password !== formData.confirmPassword) {
+      toast({
+        title: 'خطا',
+        description: 'رمز عبور و تکرار آن مطابقت ندارند',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    if (formData.password.length < 6) {
+      toast({
+        title: 'خطا',
+        description: 'رمز عبور باید حداقل ۶ کاراکتر باشد',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    setLoading(true);
+
+    const { error } = await signUp(formData.email, formData.password);
+
+    if (error) {
+      let message = error.message;
+      if (error.message.includes('already registered')) {
+        message = 'این ایمیل قبلاً ثبت نام شده است';
+      }
+      toast({
+        title: 'خطا در ثبت نام',
+        description: message,
+        variant: 'destructive'
+      });
+    } else {
+      toast({
+        title: 'ثبت نام موفق!',
+        description: 'حساب کاربری شما ایجاد شد'
+      });
+      navigate('/profile');
+    }
+
+    setLoading(false);
   };
 
   return (
@@ -36,22 +85,6 @@ const Register = () => {
 
             <form onSubmit={handleSubmit} className="space-y-5">
               <div className="space-y-2">
-                <label className="text-sm text-muted-foreground">نام و نام خانوادگی</label>
-                <div className="relative">
-                  <User className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                  <input
-                    type="text"
-                    name="name"
-                    value={formData.name}
-                    onChange={handleChange}
-                    placeholder="علی محمدی"
-                    className="w-full pr-10 pl-4 py-3 rounded-lg bg-secondary border border-border focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-colors"
-                    required
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
                 <label className="text-sm text-muted-foreground">ایمیل</label>
                 <div className="relative">
                   <Mail className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
@@ -61,23 +94,6 @@ const Register = () => {
                     value={formData.email}
                     onChange={handleChange}
                     placeholder="example@email.com"
-                    className="w-full pr-10 pl-4 py-3 rounded-lg bg-secondary border border-border focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-colors text-left"
-                    dir="ltr"
-                    required
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm text-muted-foreground">شماره موبایل</label>
-                <div className="relative">
-                  <Phone className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                  <input
-                    type="tel"
-                    name="phone"
-                    value={formData.phone}
-                    onChange={handleChange}
-                    placeholder="۰۹۱۲۱۲۳۴۵۶۷"
                     className="w-full pr-10 pl-4 py-3 rounded-lg bg-secondary border border-border focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-colors text-left"
                     dir="ltr"
                     required
@@ -137,8 +153,8 @@ const Register = () => {
                 </span>
               </label>
 
-              <Button variant="gradient" className="w-full" size="lg" type="submit">
-                ثبت نام
+              <Button variant="gradient" className="w-full" size="lg" type="submit" disabled={loading}>
+                {loading ? 'در حال ثبت نام...' : 'ثبت نام'}
               </Button>
             </form>
 
