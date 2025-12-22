@@ -36,15 +36,15 @@ const Navbar = () => {
   ];
 
   return (
-    <nav className="fixed top-0 right-0 left-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border">
+    <nav className="fixed top-0 right-0 left-0 z-50 bg-primary backdrop-blur-xl border-b border-primary/80">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2">
-            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center">
-              <span className="text-primary-foreground font-bold text-lg">ME</span>
+            <div className="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center">
+              <span className="text-white font-bold text-lg">ME</span>
             </div>
-            <span className="hidden sm:block text-lg font-bold gradient-text">میکروالکترونیک</span>
+            <span className="hidden sm:block text-lg font-bold text-white">میکروالکترونیک</span>
           </Link>
 
           {/* Desktop Navigation */}
@@ -53,7 +53,7 @@ const Navbar = () => {
               item.children ? (
                 <DropdownMenu key={item.label}>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="gap-1">
+                    <Button variant="ghost" className="gap-1 text-white hover:bg-white/10 hover:text-white">
                       <item.icon className="w-4 h-4" />
                       {item.label}
                       <ChevronDown className="w-4 h-4" />
@@ -70,7 +70,7 @@ const Navbar = () => {
                   </DropdownMenuContent>
                 </DropdownMenu>
               ) : (
-                <Button key={item.label} variant="ghost" asChild>
+                <Button key={item.label} variant="ghost" className="text-white hover:bg-white/10 hover:text-white" asChild>
                   <Link to={item.href} className="gap-1">
                     <item.icon className="w-4 h-4" />
                     {item.label}
@@ -82,7 +82,7 @@ const Navbar = () => {
 
           {/* CTA Button */}
           <div className="hidden lg:block">
-            <Button variant="neon" asChild>
+            <Button className="bg-white text-primary hover:bg-white/90" asChild>
               <Link to="/courses">خرید دوره‌ها</Link>
             </Button>
           </div>
@@ -91,7 +91,7 @@ const Navbar = () => {
           <Button
             variant="ghost"
             size="icon"
-            className="lg:hidden"
+            className="lg:hidden text-white hover:bg-white/10"
             onClick={() => setIsOpen(!isOpen)}
           >
             {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
@@ -100,12 +100,12 @@ const Navbar = () => {
 
         {/* Mobile Navigation */}
         {isOpen && (
-          <div className="lg:hidden py-4 border-t border-border animate-fade-in">
+          <div className="lg:hidden py-4 border-t border-white/20 animate-fade-in">
             <div className="flex flex-col gap-2">
               {navItems.map((item) =>
                 item.children ? (
                   <div key={item.label} className="space-y-1">
-                    <div className="flex items-center gap-2 px-4 py-2 text-muted-foreground">
+                    <div className="flex items-center gap-2 px-4 py-2 text-white/70">
                       <item.icon className="w-4 h-4" />
                       {item.label}
                     </div>
@@ -114,7 +114,7 @@ const Navbar = () => {
                         <Link
                           key={child.label}
                           to={child.href}
-                          className="block px-4 py-2 text-foreground hover:bg-secondary rounded-lg transition-colors"
+                          className="block px-4 py-2 text-white hover:bg-white/10 rounded-lg transition-colors"
                           onClick={() => setIsOpen(false)}
                         >
                           {child.label}
@@ -126,7 +126,7 @@ const Navbar = () => {
                   <Link
                     key={item.label}
                     to={item.href}
-                    className="flex items-center gap-2 px-4 py-2 text-foreground hover:bg-secondary rounded-lg transition-colors"
+                    className="flex items-center gap-2 px-4 py-2 text-white hover:bg-white/10 rounded-lg transition-colors"
                     onClick={() => setIsOpen(false)}
                   >
                     <item.icon className="w-4 h-4" />
@@ -135,7 +135,7 @@ const Navbar = () => {
                 )
               )}
               <div className="pt-4 px-4">
-                <Button variant="neon" className="w-full" asChild>
+                <Button className="w-full bg-white text-primary hover:bg-white/90" asChild>
                   <Link to="/courses" onClick={() => setIsOpen(false)}>
                     خرید دوره‌ها
                   </Link>
