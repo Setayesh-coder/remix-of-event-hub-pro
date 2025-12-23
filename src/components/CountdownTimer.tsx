@@ -17,7 +17,7 @@ const CountdownTimer = ({ targetDate }: CountdownTimerProps) => {
   useEffect(() => {
     const calculateTimeLeft = () => {
       const difference = targetDate.getTime() - new Date().getTime();
-      
+
       if (difference > 0) {
         setTimeLeft({
           days: Math.floor(difference / (1000 * 60 * 60 * 24)),
@@ -35,10 +35,10 @@ const CountdownTimer = ({ targetDate }: CountdownTimerProps) => {
   }, [targetDate]);
 
   const timeUnits = [
-    { label: 'ثانیه', value: timeLeft.seconds },
-    { label: 'دقیقه', value: timeLeft.minutes },
-    { label: 'ساعت', value: timeLeft.hours },
     { label: 'روز', value: timeLeft.days },
+    { label: 'ساعت', value: timeLeft.hours },
+    { label: 'دقیقه', value: timeLeft.minutes },
+    { label: 'ثانیه', value: timeLeft.seconds }
   ];
 
   return (

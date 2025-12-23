@@ -15,13 +15,12 @@ const Navbar = () => {
   const navItems = [
     { label: 'گالری', href: '/gallery', icon: Image },
     {
-      label: 'دوره‌ها',
-      icon: BookOpen,
-      children: [
-        { label: 'کارگاه', href: '/courses/workshop' },
-        { label: 'وبینار', href: '/courses/webinar' },
-        { label: 'آموزش', href: '/courses/training' },
-      ],
+      label: 'آموزش', href: '/courses', icon: BookOpen,
+      // children: [
+      //   { label: 'کارگاه', href: '/courses/workshop' },
+      //   { label: 'وبینار', href: '/courses/webinar' },
+      //   { label: 'دوره‌ها', href: '/courses/training' },
+      // ],
     },
     { label: 'برنامه‌ها و زمانبندی', href: '/schedule', icon: Calendar },
     {
