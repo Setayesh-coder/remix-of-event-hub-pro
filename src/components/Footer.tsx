@@ -86,8 +86,8 @@ const Footer = () => {
         </div>
 
         <div className="mt-12 pt-6 border-t border-white/20 text-center">
-          <p className="text-white/70 text-sm">
-            © ۱۴۰۳ رویداد میکروالکترونیک. تمامی حقوق محفوظ است.
+          <p className="text-white/70 text-sm" >
+            ساخته شده توسط <a href='https://supremetech.ir/'>SupremeTech</a>
           </p>
         </div>
       </div>
