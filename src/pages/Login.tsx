@@ -29,7 +29,7 @@ const Login = () => {
     if (error) {
       toast({
         title: 'خطا در ورود',
-        description: error.message === 'Invalid login credentials' 
+        description: error.message === 'Invalid login credentials'
           ? 'ایمیل یا رمز عبور اشتباه است'
           : error.message,
         variant: 'destructive'
