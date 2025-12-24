@@ -41,8 +41,8 @@ const Index = () => {
                     <p className="text-4xl md:text-6xl lg:text-7xl">EVENT</p>
                   </div>
                 </div>
-                {/* تایمر – کمی کوچکتر و همیشه بالا و وسط */}
-                <div className="absolute top-80 right-8 z-50 w-full max-w-sm">
+                {/* تایمر – ریسپانسیو برای تمام دستگاه‌ها */}
+                <div className="w-full max-w-sm mx-auto">
                   <LiquidGlassCard
                     blurIntensity="xl"
                     glowIntensity="lg"
@@ -50,16 +50,15 @@ const Index = () => {
                     borderRadius="40px"
                     draggable={false}
                     expandable={false}
-                    className="p-8 lg:p-10 backdrop-blur-xl"
+                    className="p-6 md:p-8 lg:p-10 backdrop-blur-xl"
                   >
-                    <div className="text-center space-y-6">
-                      <h3 className="text-xl md:text-2xl lg:text-xl font-medium text-white/90">
+                    <div className="text-center space-y-4 md:space-y-6">
+                      <h3 className="text-lg md:text-xl lg:text-2xl font-medium text-white/90">
                         مدت زمان باقی‌مانده فراخوان پژوهشی
                       </h3>
-                      <div className="text-5xl md:text-7xl lg:text-5xl font-bold text-white tracking-wider">
+                      <div className="text-3xl md:text-4xl lg:text-5xl font-bold text-white tracking-wider">
                         <CountdownTimer targetDate={registrationDeadline} />
                       </div>
-
                     </div>
                   </LiquidGlassCard>
                 </div>
