@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { cn } from '@/lib/utils';
 
 interface TimeLeft {
   days: number;
@@ -9,9 +10,10 @@ interface TimeLeft {
 
 interface CountdownTimerProps {
   targetDate: Date;
+  variant?: 'default' | 'hero';
 }
 
-const CountdownTimer = ({ targetDate }: CountdownTimerProps) => {
+const CountdownTimer = ({ targetDate, variant = 'default' }: CountdownTimerProps) => {
   const [timeLeft, setTimeLeft] = useState<TimeLeft>({ days: 0, hours: 0, minutes: 0, seconds: 0 });
 
   useEffect(() => {
@@ -33,6 +35,28 @@ const CountdownTimer = ({ targetDate }: CountdownTimerProps) => {
 
     return () => clearInterval(timer);
   }, [targetDate]);
+
+  if (variant === 'hero') {
+    return (
+      <div className="flex items-center gap-2 text-primary-foreground">
+        <span className="text-5xl md:text-6xl lg:text-7xl font-bold tabular-nums">
+          {timeLeft.seconds.toString().padStart(2, '0')}
+        </span>
+        <span className="text-4xl md:text-5xl lg:text-6xl font-light opacity-60">:</span>
+        <span className="text-5xl md:text-6xl lg:text-7xl font-bold tabular-nums">
+          {timeLeft.minutes.toString().padStart(2, '0')}
+        </span>
+        <span className="text-4xl md:text-5xl lg:text-6xl font-light opacity-60">:</span>
+        <span className="text-5xl md:text-6xl lg:text-7xl font-bold tabular-nums">
+          {timeLeft.hours.toString().padStart(2, '0')}
+        </span>
+        <span className="text-4xl md:text-5xl lg:text-6xl font-light opacity-60">:</span>
+        <span className="text-5xl md:text-6xl lg:text-7xl font-bold tabular-nums">
+          {timeLeft.days.toString().padStart(2, '0')}
+        </span>
+      </div>
+    );
+  }
 
   const timeUnits = [
     { label: 'روز', value: timeLeft.days },
