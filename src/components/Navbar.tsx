@@ -23,15 +23,15 @@ const Navbar = () => {
       // ],
     },
     { label: 'برنامه‌ها و زمانبندی', href: '/schedule', icon: Calendar },
-    {
-      label: 'ثبت نام و ورود',
-      icon: LogIn,
-      children: [
-        { label: 'ورود', href: '/login' },
-        { label: 'ثبت نام', href: '/register' },
-        { label: 'پروفایل', href: '/profile' },
-      ],
-    },
+    // {
+    //   label: 'ثبت نام و ورود',
+    //   icon: LogIn,
+    //   children: [
+    //     { label: 'ورود', href: '/login' },
+    //     { label: 'ثبت نام', href: '/register' },
+    //     { label: 'پروفایل', href: '/profile' },
+    //   ],
+    // },
   ];
 
   return (
