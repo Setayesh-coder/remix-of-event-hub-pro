@@ -41,24 +41,22 @@ const Index = () => {
                     <p className="text-4xl md:text-6xl lg:text-7xl">EVENT</p>
                   </div>
                 </div>
-                {/* تایمر – ریسپانسیو برای تمام دستگاه‌ها */}
-                <div className="w-full max-w-sm mx-auto">
+                {/* تایمر – کوچک‌تر و ریسپانسیو */}
+                <div className="w-full max-w-xs mx-auto">
                   <LiquidGlassCard
-                    blurIntensity="xl"
-                    glowIntensity="lg"
-                    shadowIntensity="xl"
-                    borderRadius="40px"
+                    blurIntensity="lg"
+                    glowIntensity="md"
+                    shadowIntensity="lg"
+                    borderRadius="24px"
                     draggable={false}
                     expandable={false}
-                    className="p-6 md:p-8 lg:p-10 backdrop-blur-xl"
+                    className="p-4 md:p-5 backdrop-blur-xl"
                   >
-                    <div className="text-center space-y-4 md:space-y-6">
-                      <h3 className="text-lg md:text-xl lg:text-2xl font-medium text-white/90">
-                        مدت زمان باقی‌مانده فراخوان پژوهشی
+                    <div className="text-center space-y-2">
+                      <h3 className="text-xs md:text-sm font-medium text-white/80">
+                        زمان باقی‌مانده فراخوان
                       </h3>
-                      <div className="text-3xl md:text-4xl lg:text-5xl font-bold text-white tracking-wider">
-                        <CountdownTimer targetDate={registrationDeadline} />
-                      </div>
+                      <CountdownTimer targetDate={registrationDeadline} />
                     </div>
                   </LiquidGlassCard>
                 </div>
