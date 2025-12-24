@@ -82,7 +82,7 @@ const Navbar = () => {
           {/* CTA Button */}
           <div className="hidden lg:block">
             <Button className="bg-white text-primary hover:bg-white/90" asChild>
-              <Link to="/courses">خرید دوره‌ها</Link>
+              <Link to="/Profile"> <User /></Link>
             </Button>
           </div>
 
@@ -135,7 +135,7 @@ const Navbar = () => {
               )}
               <div className="pt-4 px-4">
                 <Button className="w-full bg-white text-primary hover:bg-white/90" asChild>
-                  <Link to="/courses" onClick={() => setIsOpen(false)}>
+                  <Link to="/Profile" onClick={() => setIsOpen(false)}>
                     خرید دوره‌ها
                   </Link>
                 </Button>

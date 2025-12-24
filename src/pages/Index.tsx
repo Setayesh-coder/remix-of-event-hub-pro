@@ -1,121 +1,132 @@
 import { Link } from 'react-router-dom';
-import { ArrowLeft, Cpu, Zap, Users } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import Layout from '@/components/Layout';
 import CountdownTimer from '@/components/CountdownTimer';
 import { Button } from '@/components/ui/button';
+import { LiquidGlassCard } from '@/components/ui/liquidglass';
 
 const Index = () => {
-  // Set registration deadline - 30 days from now
-  const registrationDeadline = new Date();
-  registrationDeadline.setDate(registrationDeadline.getDate() + 30);
-
-  const features = [
-    {
-      icon: Cpu,
-      title: 'کارگاه‌های تخصصی',
-      description: 'آموزش عملی با تجهیزات پیشرفته',
-    },
-    {
-      icon: Zap,
-      title: 'وبینارهای آنلاین',
-      description: 'دسترسی از هر نقطه از جهان',
-    },
-    {
-      icon: Users,
-      title: 'اساتید برجسته',
-      description: 'یادگیری از متخصصین صنعت',
-    },
-  ];
+  const registrationDeadline = new Date('2026-01-15T23:59:59');
 
   return (
     <Layout>
       {/* Hero Section */}
-      <section className="relative min-h-[calc(100vh-4rem)] flex items-center justify-center overflow-hidden circuit-pattern">
-        {/* Background Effects */}
-        <div className="absolute inset-0 bg-gradient-to-b from-background via-background/95 to-background" />
-        <div className="absolute top-1/4 right-1/4 w-96 h-96 bg-primary/20 rounded-full blur-3xl" />
-        <div className="absolute bottom-1/4 left-1/4 w-96 h-96 bg-accent/20 rounded-full blur-3xl" />
+      <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
+        {/* Background Image + Overlay */}
+        <div
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+          style={{
+            backgroundImage: `url('https://cdn.expertphotography.com/wp-content/uploads/2019/09/photography-quality-images-landscape.jpg')`,
+          }}
+        >
+          <div className="absolute inset-0 bg-black/60" /> {/* تاریکی بیشتر برای خوانایی بهتر */}
+        </div>
 
-        <div className="relative z-10 container mx-auto px-4 py-12">
-          <div className="max-w-4xl mx-auto text-center space-y-8">
-            {/* Badge */}
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-secondary border border-border animate-fade-in">
-              <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-              <span className="text-sm text-muted-foreground">ثبت نام آغاز شد</span>
-            </div>
-
-            {/* Title */}
-            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold leading-tight animate-fade-in" style={{ animationDelay: '100ms' }}>
-              رویداد
-              <span className="gradient-text block">میکروالکترونیک</span>
-            </h1>
-
-            {/* Subtitle */}
-            <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto animate-fade-in" style={{ animationDelay: '200ms' }}>
-              فرصتی استثنایی برای یادگیری جدیدترین تکنولوژی‌های الکترونیک و شبکه‌سازی با متخصصین صنعت
-            </p>
-
-            {/* Poster Placeholder */}
-            <div className="relative max-w-2xl mx-auto animate-fade-in" style={{ animationDelay: '300ms' }}>
-              <div className="aspect-[3/4] sm:aspect-video rounded-2xl gradient-border overflow-hidden glow">
-                <div className="w-full h-full bg-gradient-to-br from-secondary to-muted flex items-center justify-center">
-                  <div className="text-center p-8">
-                    <Cpu className="w-16 h-16 mx-auto mb-4 text-primary animate-float" />
-                    <p className="text-muted-foreground">پوستر رویداد</p>
-                    <p className="text-sm text-muted-foreground/60 mt-2">تصویر خود را اینجا قرار دهید</p>
+        {/* تمام محتوا روی یک لایه مرکزی و کاملاً وسط‌چین */}
+        <div className="relative z-10 w-full">
+          <div className="container mx-auto px-6 lg:px-8">
+            <div className="flex flex-col items-center justify-center gap-12 lg:gap-20 max-w-7xl mx-auto">
+              {/* بخش اصلی متن و دکمه‌ها – کاملاً وسط‌چین در همه سایزها */}
+              <div className="text-center space-y-10 max-w-xl">
+                {/* عنوان اصلی */}
+                <div className="space-y-6">
+                  <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold text-white tracking-wider opacity-90 leading-tight">
+                    جوانه <span className="block text-4xl md:text-6xl lg:text-7xl opacity-80">سورایا</span>
+                  </h1>
+                  <div className="text-4xl md:text-6xl lg:text-7xl font-bold text-white/90 space-y-2 opacity-80 leading-tight">
+                    <p className="text-5xl md:text-7xl lg:text-8xl">JAVANEH</p>
+                    <p className="text-3xl md:text-5xl lg:text-6xl">SORAYA</p>
+                    <p className="text-4xl md:text-6xl lg:text-7xl">PROBLEM</p>
+                    <p className="text-4xl md:text-6xl lg:text-7xl">DRIVEN</p>
+                    <p className="text-4xl md:text-6xl lg:text-7xl">EVENT</p>
                   </div>
                 </div>
-              </div>
-            </div>
+                {/* تایمر – کمی کوچکتر و همیشه بالا و وسط */}
+                <div className="absolute top-80 right-8 z-50 w-full max-w-sm">
+                  <LiquidGlassCard
+                    blurIntensity="xl"
+                    glowIntensity="lg"
+                    shadowIntensity="xl"
+                    borderRadius="40px"
+                    draggable={false}
+                    expandable={false}
+                    className="p-8 lg:p-10 backdrop-blur-xl"
+                  >
+                    <div className="text-center space-y-6">
+                      <h3 className="text-xl md:text-2xl lg:text-xl font-medium text-white/90">
+                        مدت زمان باقی‌مانده فراخوان پژوهشی
+                      </h3>
+                      <div className="text-5xl md:text-7xl lg:text-5xl font-bold text-white tracking-wider">
+                        <CountdownTimer targetDate={registrationDeadline} />
+                      </div>
 
-            {/* Countdown */}
-            <div className="space-y-4 animate-fade-in" style={{ animationDelay: '400ms' }}>
-              <h2 className="text-lg text-muted-foreground">زمان باقی‌مانده تا پایان ثبت نام</h2>
-              <div className="flex justify-center">
-                <CountdownTimer targetDate={registrationDeadline} />
-              </div>
-            </div>
-
-            {/* CTA Buttons */}
-            <div className="flex flex-col sm:flex-row gap-4 justify-center animate-fade-in" style={{ animationDelay: '500ms' }}>
-              <Button variant="gradient" size="xl" asChild>
-                <Link to="/register" className="gap-2">
-                  ثبت نام کنید
-                  <ArrowLeft className="w-5 h-5" />
-                </Link>
-              </Button>
-              <Button variant="outline" size="xl" asChild>
-                <Link to="/courses">مشاهده دوره‌ها</Link>
-              </Button>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Features Section */}
-      <section className="py-20 bg-card">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl sm:text-4xl font-bold mb-4">چرا این رویداد؟</h2>
-            <p className="text-muted-foreground max-w-xl mx-auto">
-              با شرکت در رویداد میکروالکترونیک، به جمع علاقه‌مندان و متخصصین این حوزه بپیوندید
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {features.map((feature, index) => (
-              <div
-                key={feature.title}
-                className="gradient-border p-6 rounded-xl hover:glow transition-all duration-300 animate-fade-in"
-                style={{ animationDelay: `${index * 100}ms` }}
-              >
-                <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center mb-4">
-                  <feature.icon className="w-7 h-7 text-primary" />
+                    </div>
+                  </LiquidGlassCard>
                 </div>
-                <h3 className="text-xl font-semibold mb-2">{feature.title}</h3>
-                <p className="text-muted-foreground">{feature.description}</p>
+                <p className="text-lg md:text-xl lg:text-2xl text-white/80 leading-relaxed px-4">
+                  جهت ثبت‌نام در رویداد لطفا کلیک کنید.
+                </p>
+
+                {/* دکمه‌ها – وسط‌چین و با فاصله مناسب */}
+                <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
+
+                  <Link to="/Courses" className="inline-block">
+                    <LiquidGlassCard
+                      blurIntensity="xl"
+                      glowIntensity="md"
+                      shadowIntensity="lg"
+                      borderRadius="9999px"
+                      draggable={false}
+                    >
+                      <Button
+                        size="lg"
+                        className="px-10 py-7 text-lg font-semibold bg-transparent border-0 text-white"
+                      >
+                        <span className="relative z-10 text-white">دوره‌ها</span>
+                      </Button>
+                    </LiquidGlassCard>
+                  </Link>
+
+                  <Link to="/Register" className="inline-block">
+                    <LiquidGlassCard
+                      blurIntensity="lg"
+                      glowIntensity="sm"
+                      shadowIntensity="md"
+                      borderRadius="9999px"
+                      draggable={false}
+                      className="border border-white/30"
+                    >
+                      <Button
+                        size="lg"
+                        variant="outline"
+                        className="px-10 py-7 text-lg font-semibold bg-transparent border-0 text-white hover:bg-white/10"
+                      >
+                        <span className="flex items-center gap-2">
+                          <span className="relative z-10 text-white">ثبت‌نام</span>
+                          <ArrowLeft className="h-5 w-5 z-10" />
+                        </span>
+                      </Button>
+                    </LiquidGlassCard>
+                  </Link>
+
+                </div>
               </div>
-            ))}
+            </div>
+            {/* لوگوهای اسپانسر – پایین و وسط */}
+            <div className="flex justify-center gap-8 pt-20 pb-10">
+              {[1, 2, 3, 4].map((i) => (
+                <LiquidGlassCard
+                  key={i}
+                  blurIntensity="md"
+                  glowIntensity="xs"
+                  borderRadius="50%"
+                  className="h-16 w-16"
+                  draggable={false}
+                >
+                  <div className="h-full w-full rounded-full bg-white/10" />
+                </LiquidGlassCard>
+              ))}
+            </div>
           </div>
         </div>
       </section>

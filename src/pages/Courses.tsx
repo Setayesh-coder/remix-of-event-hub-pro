@@ -28,7 +28,7 @@ const Courses = () => {
     { id: 'all', label: 'همه', icon: BookOpen },
     { id: 'workshop', label: 'کارگاه', icon: Wrench },
     { id: 'webinar', label: 'وبینار', icon: Video },
-    { id: 'training', label: 'آموزش', icon: BookOpen },
+    { id: 'training', label: 'دوره ها', icon: BookOpen },
   ] as const;
 
   const courses: Course[] = [
