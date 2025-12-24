@@ -68,19 +68,19 @@ const CountdownTimer = ({ targetDate, variant = 'default' }: CountdownTimerProps
 
 
   return (
-    <div className="grid grid-cols-4 gap-4 md:gap-3">
+    <div className="grid grid-cols-4 gap-2">
       {timeUnits.map((unit) => (
         <div key={unit.label} className="flip-card group">
           <div className="flip-card-inner">
             {/* جلوی کارت - عدد */}
             <div className="flip-card-front liquid-glass-card">
-              <span className="text-4xl md:text-4xl lg:text-4xl font-bold text-white drop-shadow-2xl">
+              <span className="text-xl md:text-2xl font-bold text-white drop-shadow-lg">
                 {unit.value.toString().padStart(2, '0')}
               </span>
             </div>
             {/* پشت کارت - برچسب */}
             <div className="flip-card-back">
-              <span className="text-sm md:text-lg text-white/80 font-medium">{unit.label}</span>
+              <span className="text-xs text-white/80 font-medium">{unit.label}</span>
             </div>
           </div>
         </div>
