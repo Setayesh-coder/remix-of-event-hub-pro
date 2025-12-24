@@ -110,28 +110,3 @@ const Index = () => {
                   </Link>
 
                 </div>
-              </div>
-            </div>
-            {/* لوگوهای اسپانسر – پایین و وسط */}
-            <div className="flex justify-center gap-8 pt-20 pb-10">
-              {[1, 2, 3, 4].map((i) => (
-                <LiquidGlassCard
-                  key={i}
-                  blurIntensity="md"
-                  glowIntensity="xs"
-                  borderRadius="50%"
-                  className="h-16 w-16"
-                  draggable={false}
-                >
-                  <div className="h-full w-full rounded-full bg-white/10" />
-                </LiquidGlassCard>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-    </Layout>
-  );
-};
-
-export default Index;
