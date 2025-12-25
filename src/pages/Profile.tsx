@@ -43,6 +43,7 @@ const Profile = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [nationalIdError, setNationalIdError] = useState<string | null>(null); // اضافه شده
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
@@ -54,6 +55,23 @@ const Profile = () => {
     { id: 'proposal' as TabId, label: 'پروپوزال من', icon: FileText },
     { id: 'certificates' as TabId, label: 'گواهی‌های صادر شده', icon: Award },
   ];
+
+  // تابع اعتبارسنجی کد ملی ایرانی
+  const validateNationalId = (nationalId: string): boolean => {
+    const trimmed = nationalId.trim();
+    if (trimmed.length !== 10) return false;
+    if (!/^\d{10}$/.test(trimmed)) return false;
+    if (/^(\d)\1{9}$/.test(trimmed)) return false; // جلوگیری از 1111111111 و مشابه
+
+    let sum = 0;
+    for (let i = 0; i < 9; i++) {
+      sum += parseInt(trimmed[i]) * (10 - i);
+    }
+    const remainder = sum % 11;
+    const checkDigit = parseInt(trimmed[9]);
+
+    return remainder < 2 ? checkDigit === remainder : checkDigit === 11 - remainder;
+  };
 
   useEffect(() => {
     if (!user) {
@@ -86,6 +104,15 @@ const Profile = () => {
         university: data.university,
         residence: data.residence,
       });
+
+      // اعتبارسنجی اولیه کد ملی بعد از لود
+      if (data.national_id) {
+        if (validateNationalId(data.national_id)) {
+          setNationalIdError(null);
+        } else {
+          setNationalIdError('کد ملی وارد شده معتبر نیست');
+        }
+      }
     }
     setLoading(false);
   };
@@ -118,15 +145,36 @@ const Profile = () => {
 
   const handleProfileChange = (field: keyof Profile, value: string) => {
     setProfile(prev => prev ? { ...prev, [field]: value } : null);
+
+    // اعتبارسنجی لحظه‌ای کد ملی
+    if (field === 'national_id') {
+      const trimmed = value.replace(/[^\d]/g, '').slice(0, 10);
+      setProfile(prev => prev ? { ...prev, national_id: trimmed } : null);
+
+      if (trimmed.length === 0) {
+        setNationalIdError(null);
+      } else if (trimmed.length < 10) {
+        setNationalIdError('کد ملی باید ۱۰ رقم باشد');
+      } else if (!validateNationalId(trimmed)) {
+        setNationalIdError('کد ملی وارد شده معتبر نیست');
+      } else {
+        setNationalIdError(null);
+      }
+    }
   };
 
   const saveProfile = async () => {
     if (!user || !profile) return;
+    if (profile.national_id && profile.national_id.length > 0 && nationalIdError) {
+      toast({ title: 'خطا', description: 'لطفاً کد ملی معتبر وارد کنید', variant: 'destructive' });
+      return;
+    }
+
     setSaving(true);
     const { error } = await supabase
       .from('profiles')
       .update({
-        national_id: profile.national_id,
+        national_id: profile.national_id || null,
         full_name: profile.full_name,
         phone: profile.phone,
         gender: profile.gender,
@@ -187,8 +235,7 @@ const Profile = () => {
 
   const deleteProposal = async (proposal: Proposal) => {
     if (!user) return;
-    // استخراج مسیر فایل از URL
-    const filePath = proposal.file_url.split('/').slice(-2).join('/');
+    const filePath = proposal.file_url.split('/storage/v1/object/public/proposals/')[1];
     await supabase.storage.from('proposals').remove([filePath]);
 
     const { error } = await supabase
@@ -251,7 +298,7 @@ const Profile = () => {
       <div className="min-h-screen py-12">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto">
-            {/* هدر پروفایل - فیکس شده */}
+            {/* هدر پروفایل */}
             <div className="relative rounded-2xl p-6 sm:p-8 mb-8 bg-card shadow-xl overflow-hidden border border-border/50">
               <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-accent/10 pointer-events-none" />
               <div className="relative z-10 flex flex-col sm:flex-row items-center justify-between gap-4">
@@ -287,24 +334,32 @@ const Profile = () => {
               ))}
             </div>
 
-            {/* محتوای تب‌ها - همه با کارت امن */}
+            {/* تب اطلاعات شخصی با اعتبارسنجی کد ملی */}
             {activeTab === 'personal' && (
               <div className="relative rounded-xl p-6 bg-card shadow-xl overflow-hidden border border-border/50 space-y-6">
                 <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-accent/5 pointer-events-none" />
                 <div className="relative z-10">
                   <h2 className="text-xl font-semibold">اطلاعات شخصی</h2>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
-                    {/* همه فیلدها مثل قبل */}
+                    {/* کد ملی با اعتبارسنجی */}
                     <div className="space-y-2">
                       <label className="text-sm text-muted-foreground">کد ملی</label>
                       <input
                         type="text"
                         value={profile?.national_id || ''}
                         onChange={(e) => handleProfileChange('national_id', e.target.value)}
-                        className="w-full px-4 py-3 rounded-lg bg-secondary border border-border focus:border-primary outline-none"
+                        className={`w-full px-4 py-3 rounded-lg bg-secondary border ${
+                          nationalIdError ? 'border-destructive focus:border-destructive' : 'border-border focus:border-primary'
+                        } outline-none`}
                         dir="ltr"
+                        placeholder="مثال: 0012345678"
+                        maxLength={10}
                       />
+                      {nationalIdError && (
+                        <p className="text-sm text-destructive">{nationalIdError}</p>
+                      )}
                     </div>
+
                     <div className="space-y-2">
                       <label className="text-sm text-muted-foreground">نام و نام خانوادگی</label>
                       <input
@@ -314,7 +369,7 @@ const Profile = () => {
                         className="w-full px-4 py-3 rounded-lg bg-secondary border border-border focus:border-primary outline-none"
                       />
                     </div>
-                    {/* بقیه فیلدها دقیقاً مثل کد اصلیت */}
+
                     <div className="space-y-2">
                       <label className="text-sm text-muted-foreground">شماره تماس</label>
                       <input
@@ -325,6 +380,7 @@ const Profile = () => {
                         dir="ltr"
                       />
                     </div>
+
                     <div className="space-y-2">
                       <label className="text-sm text-muted-foreground">محل سکونت</label>
                       <CitySelect
@@ -332,6 +388,7 @@ const Profile = () => {
                         onChange={(value) => handleProfileChange('residence', value)}
                       />
                     </div>
+
                     <div className="space-y-2">
                       <label className="text-sm text-muted-foreground">جنسیت</label>
                       <select
@@ -344,6 +401,7 @@ const Profile = () => {
                         <option value="female">زن</option>
                       </select>
                     </div>
+
                     <div className="space-y-2">
                       <label className="text-sm text-muted-foreground">رشته تحصیلی</label>
                       <input
@@ -353,6 +411,7 @@ const Profile = () => {
                         className="w-full px-4 py-3 rounded-lg bg-secondary border border-border focus:border-primary outline-none"
                       />
                     </div>
+
                     <div className="space-y-2">
                       <label className="text-sm text-muted-foreground">مقطع تحصیلی</label>
                       <select
@@ -368,6 +427,7 @@ const Profile = () => {
                         <option value="phd">دکتری</option>
                       </select>
                     </div>
+
                     <div className="space-y-2">
                       <label className="text-sm text-muted-foreground">دانشگاه</label>
                       <input
@@ -377,16 +437,21 @@ const Profile = () => {
                         className="w-full px-4 py-3 rounded-lg bg-secondary border border-border focus:border-primary outline-none"
                       />
                     </div>
-
                   </div>
-                  <Button variant="gradient" onClick={saveProfile} disabled={saving} className="mt-6">
+
+                  <Button
+                    variant="gradient"
+                    onClick={saveProfile}
+                    disabled={saving || !!nationalIdError}
+                    className="mt-6"
+                  >
                     {saving ? 'در حال ذخیره...' : 'ذخیره تغییرات'}
                   </Button>
                 </div>
               </div>
             )}
 
-            {/* بقیه تب‌ها هم دقیقاً با همین ساختار (relative + z-10 + bg-card + shadow) */}
+            {/* بقیه تب‌ها بدون تغییر */}
             {activeTab === 'courses' && (
               <div className="relative rounded-xl p-6 bg-card shadow-xl overflow-hidden border border-border/50">
                 <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-accent/5 pointer-events-none" />
