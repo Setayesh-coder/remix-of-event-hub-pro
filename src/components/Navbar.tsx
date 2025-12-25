@@ -48,35 +48,14 @@ const Navbar = () => {
 
           {/* Desktop Navigation */}
           <div className="hidden lg:flex items-center gap-1">
-            {navItems.map((item) =>
-              item.children ? (
-                <DropdownMenu key={item.label}>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="gap-1 text-white hover:bg-white/10 hover:text-white">
-                      <item.icon className="w-4 h-4" />
-                      {item.label}
-                      <ChevronDown className="w-4 h-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="bg-popover border-border">
-                    {item.children.map((child) => (
-                      <DropdownMenuItem key={child.label} asChild>
-                        <Link to={child.href} className="cursor-pointer">
-                          {child.label}
-                        </Link>
-                      </DropdownMenuItem>
-                    ))}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              ) : (
-                <Button key={item.label} variant="ghost" className="text-white hover:bg-white/10 hover:text-white" asChild>
-                  <Link to={item.href} className="gap-1">
-                    <item.icon className="w-4 h-4" />
-                    {item.label}
-                  </Link>
-                </Button>
-              )
-            )}
+            {navItems.map((item) => (
+              <Button key={item.label} variant="ghost" className="text-white hover:bg-white/10 hover:text-white" asChild>
+                <Link to={item.href} className="gap-1">
+                  <item.icon className="w-4 h-4" />
+                  {item.label}
+                </Link>
+              </Button>
+            ))}
           </div>
 
           {/* CTA Button */}
@@ -101,38 +80,17 @@ const Navbar = () => {
         {isOpen && (
           <div className="lg:hidden py-4 border-t border-white/20 animate-fade-in">
             <div className="flex flex-col gap-2">
-              {navItems.map((item) =>
-                item.children ? (
-                  <div key={item.label} className="space-y-1">
-                    <div className="flex items-center gap-2 px-4 py-2 text-white/70">
-                      <item.icon className="w-4 h-4" />
-                      {item.label}
-                    </div>
-                    <div className="pr-8 space-y-1">
-                      {item.children.map((child) => (
-                        <Link
-                          key={child.label}
-                          to={child.href}
-                          className="block px-4 py-2 text-white hover:bg-white/10 rounded-lg transition-colors"
-                          onClick={() => setIsOpen(false)}
-                        >
-                          {child.label}
-                        </Link>
-                      ))}
-                    </div>
-                  </div>
-                ) : (
-                  <Link
-                    key={item.label}
-                    to={item.href}
-                    className="flex items-center gap-2 px-4 py-2 text-white hover:bg-white/10 rounded-lg transition-colors"
-                    onClick={() => setIsOpen(false)}
-                  >
-                    <item.icon className="w-4 h-4" />
-                    {item.label}
-                  </Link>
-                )
-              )}
+              {navItems.map((item) => (
+                <Link
+                  key={item.label}
+                  to={item.href}
+                  className="flex items-center gap-2 px-4 py-2 text-white hover:bg-white/10 rounded-lg transition-colors"
+                  onClick={() => setIsOpen(false)}
+                >
+                  <item.icon className="w-4 h-4" />
+                  {item.label}
+                </Link>
+              ))}
               <div className="pt-4 px-4">
                 <Button className="w-full bg-white text-primary hover:bg-white/90" asChild>
                   <Link to="/Profile" onClick={() => setIsOpen(false)}>

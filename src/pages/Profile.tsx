@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import CitySelect from '@/components/CitySelect';
 
 type TabId = 'personal' | 'courses' | 'card' | 'proposal' | 'certificates';
 
@@ -371,11 +372,9 @@ const Profile = () => {
                     </div>
                     <div className="space-y-2">
                       <label className="text-sm text-muted-foreground">محل سکونت</label>
-                      <input
-                        type="text"
+                      <CitySelect
                         value={profile?.residence || ''}
-                        onChange={(e) => handleProfileChange('residence', e.target.value)}
-                        className="w-full px-4 py-3 rounded-lg bg-secondary border border-border focus:border-primary outline-none"
+                        onChange={(value) => handleProfileChange('residence', value)}
                       />
                     </div>
                   </div>
