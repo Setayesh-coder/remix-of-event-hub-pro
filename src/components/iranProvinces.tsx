@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { ChevronDown, Search } from 'lucide-react';
-import { iranCities } from '@/data/iranCities';
+import { iranProvinces } from '@/data/iranProvinces';
 
 interface CitySelectProps {
   value: string;
@@ -12,7 +12,7 @@ const CitySelect = ({ value, onChange }: CitySelectProps) => {
   const [search, setSearch] = useState('');
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const filteredCities = iranCities.filter(city =>
+  const filteredCities = iranProvinces.filter(city =>
     city.includes(search)
   );
 
@@ -48,7 +48,8 @@ const CitySelect = ({ value, onChange }: CitySelectProps) => {
                 type="text"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="جستجوی شهر..."
+                placeholder="جستجوی استان
+                ..."
                 className="w-full pr-10 pl-4 py-2 rounded-md bg-secondary border border-border focus:border-primary outline-none text-sm"
               />
             </div>
@@ -64,9 +65,8 @@ const CitySelect = ({ value, onChange }: CitySelectProps) => {
                     setIsOpen(false);
                     setSearch('');
                   }}
-                  className={`w-full px-4 py-2 text-right hover:bg-accent transition-colors ${
-                    value === city ? 'bg-accent text-accent-foreground' : ''
-                  }`}
+                  className={`w-full px-4 py-2 text-right hover:bg-accent transition-colors ${value === city ? 'bg-accent text-accent-foreground' : ''
+                    }`}
                 >
                   {city}
                 </button>

@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
-import CitySelect from '@/components/CitySelect';
+import CitySelect from '@/components/iranProvinces';
 
 type TabId = 'personal' | 'courses' | 'card' | 'proposal' | 'certificates';
 
@@ -326,6 +326,13 @@ const Profile = () => {
                       />
                     </div>
                     <div className="space-y-2">
+                      <label className="text-sm text-muted-foreground">محل سکونت</label>
+                      <CitySelect
+                        value={profile?.residence || ''}
+                        onChange={(value) => handleProfileChange('residence', value)}
+                      />
+                    </div>
+                    <div className="space-y-2">
                       <label className="text-sm text-muted-foreground">جنسیت</label>
                       <select
                         value={profile?.gender || ''}
@@ -370,13 +377,7 @@ const Profile = () => {
                         className="w-full px-4 py-3 rounded-lg bg-secondary border border-border focus:border-primary outline-none"
                       />
                     </div>
-                    <div className="space-y-2">
-                      <label className="text-sm text-muted-foreground">محل سکونت</label>
-                      <CitySelect
-                        value={profile?.residence || ''}
-                        onChange={(value) => handleProfileChange('residence', value)}
-                      />
-                    </div>
+
                   </div>
                   <Button variant="gradient" onClick={saveProfile} disabled={saving} className="mt-6">
                     {saving ? 'در حال ذخیره...' : 'ذخیره تغییرات'}
