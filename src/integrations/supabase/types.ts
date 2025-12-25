@@ -14,6 +14,35 @@ export type Database = {
   }
   public: {
     Tables: {
+      cart_items: {
+        Row: {
+          added_at: string
+          course_id: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          added_at?: string
+          course_id: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          added_at?: string
+          course_id?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cart_items_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       certificates: {
         Row: {
           certificate_url: string | null
@@ -35,6 +64,45 @@ export type Database = {
           issued_at?: string
           title?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      courses: {
+        Row: {
+          category: string
+          created_at: string
+          description: string | null
+          duration: string | null
+          id: string
+          image_url: string | null
+          instructor: string | null
+          original_price: number | null
+          price: number
+          title: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          description?: string | null
+          duration?: string | null
+          id?: string
+          image_url?: string | null
+          instructor?: string | null
+          original_price?: number | null
+          price?: number
+          title: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          description?: string | null
+          duration?: string | null
+          id?: string
+          image_url?: string | null
+          instructor?: string | null
+          original_price?: number | null
+          price?: number
+          title?: string
         }
         Relationships: []
       }
@@ -106,6 +174,35 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      user_courses: {
+        Row: {
+          course_id: string
+          id: string
+          purchased_at: string
+          user_id: string
+        }
+        Insert: {
+          course_id: string
+          id?: string
+          purchased_at?: string
+          user_id: string
+        }
+        Update: {
+          course_id?: string
+          id?: string
+          purchased_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_courses_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {

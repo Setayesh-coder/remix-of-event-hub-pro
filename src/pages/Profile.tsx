@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { User, BookOpen, CreditCard, FileText, Award, LogOut, Download, Upload, Trash2 } from 'lucide-react';
+import { User, BookOpen, CreditCard, FileText, Award, LogOut, Download, Upload, Trash2, ShoppingCart, X } from 'lucide-react';
 import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
@@ -8,7 +8,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import CitySelect from '@/components/iranProvinces';
 
-type TabId = 'personal' | 'courses' | 'card' | 'proposal' | 'certificates';
+type TabId = 'personal' | 'cart' | 'courses' | 'card' | 'proposal' | 'certificates';
 
 interface Profile {
   national_id: string | null;
@@ -35,14 +35,41 @@ interface Certificate {
   certificate_url: string | null;
 }
 
+interface Course {
+  id: string;
+  title: string;
+  description: string | null;
+  price: number;
+  original_price: number | null;
+  duration: string | null;
+  category: string;
+  instructor: string | null;
+}
+
+interface CartItem {
+  id: string;
+  course_id: string;
+  course: Course;
+}
+
+interface UserCourse {
+  id: string;
+  course_id: string;
+  purchased_at: string;
+  course: Course;
+}
+
 const Profile = () => {
   const [activeTab, setActiveTab] = useState<TabId>('personal');
   const [profile, setProfile] = useState<Profile | null>(null);
   const [proposals, setProposals] = useState<Proposal[]>([]);
   const [certificates, setCertificates] = useState<Certificate[]>([]);
+  const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  const [userCourses, setUserCourses] = useState<UserCourse[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [processing, setProcessing] = useState(false);
   const [nationalIdError, setNationalIdError] = useState<string | null>(null);
   const [phoneError, setPhoneError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -51,6 +78,7 @@ const Profile = () => {
 
   const tabs = [
     { id: 'personal' as TabId, label: 'اطلاعات شخصی', icon: User },
+    { id: 'cart' as TabId, label: 'سبد خرید', icon: ShoppingCart },
     { id: 'courses' as TabId, label: 'دوره‌های من', icon: BookOpen },
     { id: 'card' as TabId, label: 'دریافت کارت', icon: CreditCard },
     { id: 'proposal' as TabId, label: 'پروپوزال من', icon: FileText },
@@ -62,7 +90,7 @@ const Profile = () => {
     const trimmed = nationalId.trim();
     if (trimmed.length !== 10) return false;
     if (!/^\d{10}$/.test(trimmed)) return false;
-    if (/^(\d)\1{9}$/.test(trimmed)) return false; // جلوگیری از 1111111111 و مشابه
+    if (/^(\d)\1{9}$/.test(trimmed)) return false;
 
     let sum = 0;
     for (let i = 0; i < 9; i++) {
@@ -77,7 +105,6 @@ const Profile = () => {
   // تابع اعتبارسنجی شماره تماس ایرانی
   const validatePhone = (phone: string): boolean => {
     const trimmed = phone.trim();
-    // شماره موبایل ایران باید با 09 شروع شود و 11 رقم باشد
     return /^09\d{9}$/.test(trimmed);
   };
 
@@ -89,6 +116,8 @@ const Profile = () => {
     fetchProfile();
     fetchProposals();
     fetchCertificates();
+    fetchCartItems();
+    fetchUserCourses();
   }, [user, navigate]);
 
   const fetchProfile = async () => {
@@ -113,7 +142,6 @@ const Profile = () => {
         residence: data.residence,
       });
 
-      // اعتبارسنجی اولیه کد ملی بعد از لود
       if (data.national_id) {
         if (validateNationalId(data.national_id)) {
           setNationalIdError(null);
@@ -151,10 +179,67 @@ const Profile = () => {
     }
   };
 
+  const fetchCartItems = async () => {
+    if (!user) return;
+    const { data, error } = await supabase
+      .from('cart_items')
+      .select('id, course_id')
+      .eq('user_id', user.id);
+
+    if (!error && data) {
+      // Fetch course details for each cart item
+      const courseIds = data.map(item => item.course_id);
+      if (courseIds.length > 0) {
+        const { data: coursesData } = await supabase
+          .from('courses')
+          .select('*')
+          .in('id', courseIds);
+
+        if (coursesData) {
+          const cartWithCourses = data.map(item => ({
+            ...item,
+            course: coursesData.find(c => c.id === item.course_id) as Course
+          }));
+          setCartItems(cartWithCourses);
+        }
+      } else {
+        setCartItems([]);
+      }
+    }
+  };
+
+  const fetchUserCourses = async () => {
+    if (!user) return;
+    const { data, error } = await supabase
+      .from('user_courses')
+      .select('id, course_id, purchased_at')
+      .eq('user_id', user.id)
+      .order('purchased_at', { ascending: false });
+
+    if (!error && data) {
+      const courseIds = data.map(item => item.course_id);
+      if (courseIds.length > 0) {
+        const { data: coursesData } = await supabase
+          .from('courses')
+          .select('*')
+          .in('id', courseIds);
+
+        if (coursesData) {
+          const coursesWithDetails = data.map(item => ({
+            ...item,
+            course: coursesData.find(c => c.id === item.course_id) as Course
+          }));
+          setUserCourses(coursesWithDetails);
+        }
+      } else {
+        setUserCourses([]);
+      }
+    }
+  };
+
   const handleProfileChange = (field: keyof Profile, value: string) => {
     setProfile(prev => prev ? { ...prev, [field]: value } : null);
 
-    // اعتبارسنجی لحظه‌ای کد ملی
     if (field === 'national_id') {
       const trimmed = value.replace(/[^\d]/g, '').slice(0, 10);
       setProfile(prev => prev ? { ...prev, national_id: trimmed } : null);
@@ -170,7 +255,6 @@ const Profile = () => {
       }
     }
 
-    // اعتبارسنجی لحظه‌ای شماره تماس
     if (field === 'phone') {
       const trimmed = value.replace(/[^\d]/g, '').slice(0, 11);
       setProfile(prev => prev ? { ...prev, phone: trimmed } : null);
@@ -282,6 +366,53 @@ const Profile = () => {
     }
   };
 
+  const removeFromCart = async (cartItemId: string) => {
+    const { error } = await supabase
+      .from('cart_items')
+      .delete()
+      .eq('id', cartItemId);
+
+    if (!error) {
+      setCartItems(prev => prev.filter(item => item.id !== cartItemId));
+      toast({ title: 'حذف شد', description: 'دوره از سبد خرید حذف شد' });
+    }
+  };
+
+  const getCartTotal = () => {
+    return cartItems.reduce((total, item) => total + (item.course?.price || 0), 0);
+  };
+
+  const handlePayment = async () => {
+    if (!user || cartItems.length === 0) return;
+    
+    setProcessing(true);
+    
+    // اضافه کردن دوره‌ها به لیست دوره‌های خریداری شده
+    for (const item of cartItems) {
+      await supabase
+        .from('user_courses')
+        .insert({
+          user_id: user.id,
+          course_id: item.course_id,
+        });
+    }
+
+    // حذف آیتم‌ها از سبد خرید
+    for (const item of cartItems) {
+      await supabase
+        .from('cart_items')
+        .delete()
+        .eq('id', item.id);
+    }
+
+    setCartItems([]);
+    await fetchUserCourses();
+    setProcessing(false);
+    
+    toast({ title: 'پرداخت موفق', description: 'دوره‌ها با موفقیت به لیست دوره‌های شما اضافه شدند' });
+    setActiveTab('courses');
+  };
+
   const downloadCard = () => {
     if (!profile?.full_name || !profile?.phone) {
       toast({ title: 'توجه', description: 'لطفاً ابتدا اطلاعات شخصی را تکمیل کنید', variant: 'destructive' });
@@ -314,6 +445,11 @@ const Profile = () => {
     link.href = canvas.toDataURL();
     link.click();
     toast({ title: 'موفق', description: 'کارت دانلود شد' });
+  };
+
+  const formatPrice = (price: number) => {
+    if (price === 0) return 'رایگان';
+    return new Intl.NumberFormat('fa-IR').format(price) + ' تومان';
   };
 
   if (loading) {
@@ -358,23 +494,27 @@ const Profile = () => {
                   key={tab.id}
                   variant={activeTab === tab.id ? 'default' : 'outline'}
                   onClick={() => setActiveTab(tab.id)}
-                  className="gap-2 shrink-0"
+                  className="gap-2 shrink-0 relative"
                   size="sm"
                 >
                   <tab.icon className="w-4 h-4" />
                   {tab.label}
+                  {tab.id === 'cart' && cartItems.length > 0 && (
+                    <span className="absolute -top-1 -right-1 w-5 h-5 bg-destructive text-destructive-foreground text-xs rounded-full flex items-center justify-center">
+                      {cartItems.length}
+                    </span>
+                  )}
                 </Button>
               ))}
             </div>
 
-            {/* تب اطلاعات شخصی با اعتبارسنجی کد ملی */}
+            {/* تب اطلاعات شخصی */}
             {activeTab === 'personal' && (
               <div className="relative rounded-xl p-6 bg-card shadow-xl overflow-hidden border border-border/50 space-y-6">
                 <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-accent/5 pointer-events-none" />
                 <div className="relative z-10">
                   <h2 className="text-xl font-semibold">اطلاعات شخصی</h2>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
-                    {/* کد ملی با اعتبارسنجی */}
                     <div className="space-y-2">
                       <label className="text-sm text-muted-foreground">کد ملی</label>
                       <input
@@ -491,17 +631,97 @@ const Profile = () => {
               </div>
             )}
 
-            {/* بقیه تب‌ها بدون تغییر */}
+            {/* تب سبد خرید */}
+            {activeTab === 'cart' && (
+              <div className="relative rounded-xl p-6 bg-card shadow-xl overflow-hidden border border-border/50">
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-accent/5 pointer-events-none" />
+                <div className="relative z-10">
+                  <h2 className="text-xl font-semibold mb-4">سبد خرید</h2>
+                  
+                  {cartItems.length === 0 ? (
+                    <p className="text-muted-foreground">سبد خرید شما خالی است.</p>
+                  ) : (
+                    <div className="space-y-4">
+                      {cartItems.map((item) => (
+                        <div key={item.id} className="flex items-center justify-between p-4 bg-secondary rounded-lg">
+                          <div className="flex-1">
+                            <h3 className="font-medium">{item.course?.title}</h3>
+                            <p className="text-sm text-muted-foreground">
+                              {item.course?.instructor && `مدرس: ${item.course.instructor}`}
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-4">
+                            <span className="text-primary font-bold">
+                              {formatPrice(item.course?.price || 0)}
+                            </span>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => removeFromCart(item.id)}
+                              className="text-destructive hover:text-destructive"
+                            >
+                              <X className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                      
+                      <div className="border-t border-border pt-4 mt-4">
+                        <div className="flex items-center justify-between mb-4">
+                          <span className="text-lg font-semibold">جمع کل:</span>
+                          <span className="text-2xl font-bold text-primary">
+                            {formatPrice(getCartTotal())}
+                          </span>
+                        </div>
+                        <Button
+                          variant="gradient"
+                          className="w-full"
+                          onClick={handlePayment}
+                          disabled={processing}
+                        >
+                          {processing ? 'در حال پردازش...' : 'پرداخت و ثبت نام'}
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* تب دوره‌های من */}
             {activeTab === 'courses' && (
               <div className="relative rounded-xl p-6 bg-card shadow-xl overflow-hidden border border-border/50">
                 <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-accent/5 pointer-events-none" />
                 <div className="relative z-10">
                   <h2 className="text-xl font-semibold mb-4">دوره‌های ثبت نام شده</h2>
-                  <p className="text-muted-foreground">شما هنوز در هیچ دوره‌ای ثبت نام نکرده‌اید.</p>
+                  
+                  {userCourses.length === 0 ? (
+                    <p className="text-muted-foreground">شما هنوز در هیچ دوره‌ای ثبت نام نکرده‌اید.</p>
+                  ) : (
+                    <div className="space-y-3">
+                      {userCourses.map((item) => (
+                        <div key={item.id} className="flex items-center justify-between p-4 bg-secondary rounded-lg">
+                          <div className="flex items-center gap-3">
+                            <BookOpen className="w-5 h-5 text-primary" />
+                            <div>
+                              <p className="font-medium">{item.course?.title}</p>
+                              <p className="text-sm text-muted-foreground">
+                                {item.course?.instructor && `مدرس: ${item.course.instructor}`}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="text-sm text-muted-foreground">
+                            {new Date(item.purchased_at).toLocaleDateString('fa-IR')}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
             )}
 
+            {/* تب دریافت کارت */}
             {activeTab === 'card' && (
               <div className="relative rounded-xl p-6 bg-card shadow-xl overflow-hidden border border-border/50 space-y-6">
                 <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-accent/5 pointer-events-none" />
@@ -520,6 +740,7 @@ const Profile = () => {
               </div>
             )}
 
+            {/* تب پروپوزال */}
             {activeTab === 'proposal' && (
               <div className="relative rounded-xl p-6 bg-card shadow-xl overflow-hidden border border-border/50 space-y-6">
                 <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-accent/5 pointer-events-none" />
@@ -577,6 +798,7 @@ const Profile = () => {
               </div>
             )}
 
+            {/* تب گواهی‌ها */}
             {activeTab === 'certificates' && (
               <div className="relative rounded-xl p-6 bg-card shadow-xl overflow-hidden border border-border/50">
                 <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-accent/5 pointer-events-none" />
