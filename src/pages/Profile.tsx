@@ -11,14 +11,14 @@ import CitySelect from '@/components/iranProvinces';
 type TabId = 'personal' | 'courses' | 'card' | 'proposal' | 'certificates';
 
 interface Profile {
-  national_id: string | null;
-  full_name: string | null;
-  phone: string | null;
-  gender: string | null;
-  field_of_study: string | null;
-  education_level: string | null;
-  university: string | null;
-  residence: string | null;
+  national_id: string;
+  full_name: string;
+  phone: string;
+  gender: string;
+  field_of_study: string;
+  education_level: string;
+  university: string;
+  residence: string;
 }
 
 interface Proposal {
@@ -37,7 +37,19 @@ interface Certificate {
 
 const Profile = () => {
   const [activeTab, setActiveTab] = useState<TabId>('personal');
-  const [profile, setProfile] = useState<Profile | null>(null);
+
+  // همیشه یک شیء اولیه داریم — دیگر null نیست
+  const [profile, setProfile] = useState<Profile>({
+    national_id: '',
+    full_name: '',
+    phone: '',
+    gender: '',
+    field_of_study: '',
+    education_level: '',
+    university: '',
+    residence: '',
+  });
+
   const [proposals, setProposals] = useState<Proposal[]>([]);
   const [certificates, setCertificates] = useState<Certificate[]>([]);
   const [loading, setLoading] = useState(true);
@@ -75,16 +87,18 @@ const Profile = () => {
 
     if (error) {
       console.error('Error fetching profile:', error);
+      toast({ title: 'خطا', description: 'خطا در بارگذاری اطلاعات', variant: 'destructive' });
     } else if (data) {
+      // همه فیلدها رو به string خالی تبدیل می‌کنیم اگر null باشن
       setProfile({
-        national_id: data.national_id,
-        full_name: data.full_name,
-        phone: data.phone,
-        gender: data.gender,
-        field_of_study: data.field_of_study,
-        education_level: data.education_level,
-        university: data.university,
-        residence: data.residence,
+        national_id: data.national_id ?? '',
+        full_name: data.full_name ?? '',
+        phone: data.phone ?? '',
+        gender: data.gender ?? '',
+        field_of_study: data.field_of_study ?? '',
+        education_level: data.education_level ?? '',
+        university: data.university ?? '',
+        residence: data.residence ?? '',
       });
     }
     setLoading(false);
@@ -116,26 +130,27 @@ const Profile = () => {
     }
   };
 
+  // حالا ساده و امن — چون profile همیشه شیء هست
   const handleProfileChange = (field: keyof Profile, value: string) => {
-    setProfile(prev => prev ? { ...prev, [field]: value } : null);
+    setProfile(prev => ({ ...prev, [field]: value }));
   };
 
   const saveProfile = async () => {
-    if (!user || !profile) return;
+    if (!user) return;
     setSaving(true);
     const { error } = await supabase
       .from('profiles')
-      .update({
-        national_id: profile.national_id,
-        full_name: profile.full_name,
-        phone: profile.phone,
-        gender: profile.gender,
-        field_of_study: profile.field_of_study,
-        education_level: profile.education_level,
-        university: profile.university,
-        residence: profile.residence,
-      })
-      .eq('user_id', user.id);
+      .upsert({
+        user_id: user.id,
+        national_id: profile.national_id || null,
+        full_name: profile.full_name || null,
+        phone: profile.phone || null,
+        gender: profile.gender || null,
+        field_of_study: profile.field_of_study || null,
+        education_level: profile.education_level || null,
+        university: profile.university || null,
+        residence: profile.residence || null,
+      });
 
     if (error) {
       toast({ title: 'خطا', description: 'خطا در ذخیره اطلاعات', variant: 'destructive' });
@@ -187,7 +202,6 @@ const Profile = () => {
 
   const deleteProposal = async (proposal: Proposal) => {
     if (!user) return;
-    // استخراج مسیر فایل از URL
     const filePath = proposal.file_url.split('/').slice(-2).join('/');
     await supabase.storage.from('proposals').remove([filePath]);
 
@@ -203,7 +217,7 @@ const Profile = () => {
   };
 
   const downloadCard = () => {
-    if (!profile?.full_name || !profile?.phone) {
+    if (!profile.full_name || !profile.phone) {
       toast({ title: 'توجه', description: 'لطفاً ابتدا اطلاعات شخصی را تکمیل کنید', variant: 'destructive' });
       return;
     }
@@ -251,7 +265,7 @@ const Profile = () => {
       <div className="min-h-screen py-12">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto">
-            {/* هدر پروفایل - فیکس شده */}
+            {/* هدر پروفایل */}
             <div className="relative rounded-2xl p-6 sm:p-8 mb-8 bg-card shadow-xl overflow-hidden border border-border/50">
               <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-accent/10 pointer-events-none" />
               <div className="relative z-10 flex flex-col sm:flex-row items-center justify-between gap-4">
@@ -260,7 +274,7 @@ const Profile = () => {
                     <User className="w-8 h-8 text-white" />
                   </div>
                   <div>
-                    <h1 className="text-xl font-bold">{profile?.full_name || 'کاربر'}</h1>
+                    <h1 className="text-xl font-bold">{profile.full_name || 'کاربر'}</h1>
                     <p className="text-muted-foreground text-sm">{user?.email}</p>
                   </div>
                 </div>
@@ -287,39 +301,38 @@ const Profile = () => {
               ))}
             </div>
 
-            {/* محتوای تب‌ها - همه با کارت امن */}
+            {/* تب اطلاعات شخصی */}
             {activeTab === 'personal' && (
-              <div className="relative rounded-xl p-6 bg-card shadow-xl overflow-hidden border border-border/50 space-y-6">
+              <div className="relative rounded-xl p-6 bg-card shadow-xl overflow-hidden border border-border/50">
                 <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-accent/5 pointer-events-none" />
-                <div className="relative z-10">
+                <div className="relative z-10 space-y-6">
                   <h2 className="text-xl font-semibold">اطلاعات شخصی</h2>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
-                    {/* همه فیلدها مثل قبل */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <label className="text-sm text-muted-foreground">کد ملی</label>
                       <input
                         type="text"
-                        value={profile?.national_id || ''}
+                        value={profile.national_id}
                         onChange={(e) => handleProfileChange('national_id', e.target.value)}
                         className="w-full px-4 py-3 rounded-lg bg-secondary border border-border focus:border-primary outline-none"
                         dir="ltr"
+                        maxLength={10}
                       />
                     </div>
                     <div className="space-y-2">
                       <label className="text-sm text-muted-foreground">نام و نام خانوادگی</label>
                       <input
                         type="text"
-                        value={profile?.full_name || ''}
+                        value={profile.full_name}
                         onChange={(e) => handleProfileChange('full_name', e.target.value)}
                         className="w-full px-4 py-3 rounded-lg bg-secondary border border-border focus:border-primary outline-none"
                       />
                     </div>
-                    {/* بقیه فیلدها دقیقاً مثل کد اصلیت */}
                     <div className="space-y-2">
                       <label className="text-sm text-muted-foreground">شماره تماس</label>
                       <input
                         type="tel"
-                        value={profile?.phone || ''}
+                        value={profile.phone}
                         onChange={(e) => handleProfileChange('phone', e.target.value)}
                         className="w-full px-4 py-3 rounded-lg bg-secondary border border-border focus:border-primary outline-none"
                         dir="ltr"
@@ -328,14 +341,14 @@ const Profile = () => {
                     <div className="space-y-2">
                       <label className="text-sm text-muted-foreground">محل سکونت</label>
                       <CitySelect
-                        value={profile?.residence || ''}
+                        value={profile.residence}
                         onChange={(value) => handleProfileChange('residence', value)}
                       />
                     </div>
                     <div className="space-y-2">
                       <label className="text-sm text-muted-foreground">جنسیت</label>
                       <select
-                        value={profile?.gender || ''}
+                        value={profile.gender}
                         onChange={(e) => handleProfileChange('gender', e.target.value)}
                         className="w-full px-4 py-3 rounded-lg bg-secondary border border-border focus:border-primary outline-none"
                       >
@@ -348,7 +361,7 @@ const Profile = () => {
                       <label className="text-sm text-muted-foreground">رشته تحصیلی</label>
                       <input
                         type="text"
-                        value={profile?.field_of_study || ''}
+                        value={profile.field_of_study}
                         onChange={(e) => handleProfileChange('field_of_study', e.target.value)}
                         className="w-full px-4 py-3 rounded-lg bg-secondary border border-border focus:border-primary outline-none"
                       />
@@ -356,7 +369,7 @@ const Profile = () => {
                     <div className="space-y-2">
                       <label className="text-sm text-muted-foreground">مقطع تحصیلی</label>
                       <select
-                        value={profile?.education_level || ''}
+                        value={profile.education_level}
                         onChange={(e) => handleProfileChange('education_level', e.target.value)}
                         className="w-full px-4 py-3 rounded-lg bg-secondary border border-border focus:border-primary outline-none"
                       >
@@ -372,12 +385,11 @@ const Profile = () => {
                       <label className="text-sm text-muted-foreground">دانشگاه</label>
                       <input
                         type="text"
-                        value={profile?.university || ''}
+                        value={profile.university}
                         onChange={(e) => handleProfileChange('university', e.target.value)}
                         className="w-full px-4 py-3 rounded-lg bg-secondary border border-border focus:border-primary outline-none"
                       />
                     </div>
-
                   </div>
                   <Button variant="gradient" onClick={saveProfile} disabled={saving} className="mt-6">
                     {saving ? 'در حال ذخیره...' : 'ذخیره تغییرات'}
@@ -386,7 +398,7 @@ const Profile = () => {
               </div>
             )}
 
-            {/* بقیه تب‌ها هم دقیقاً با همین ساختار (relative + z-10 + bg-card + shadow) */}
+            {/* بقیه تب‌ها بدون تغییر زیاد — فقط ساختار یکسان */}
             {activeTab === 'courses' && (
               <div className="relative rounded-xl p-6 bg-card shadow-xl overflow-hidden border border-border/50">
                 <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-accent/5 pointer-events-none" />
@@ -398,14 +410,14 @@ const Profile = () => {
             )}
 
             {activeTab === 'card' && (
-              <div className="relative rounded-xl p-6 bg-card shadow-xl overflow-hidden border border-border/50 space-y-6">
+              <div className="relative rounded-xl p-6 bg-card shadow-xl overflow-hidden border border-border/50">
                 <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-accent/5 pointer-events-none" />
-                <div className="relative z-10">
+                <div className="relative z-10 space-y-6">
                   <h2 className="text-xl font-semibold">دریافت کارت شرکت‌کننده</h2>
                   <div className="bg-gradient-to-br from-primary to-accent rounded-xl p-6 text-white max-w-sm mt-4">
                     <h3 className="text-lg font-bold mb-4">کارت شرکت‌کننده</h3>
-                    <p className="mb-2">نام: {profile?.full_name || '---'}</p>
-                    <p>تماس: {profile?.phone || '---'}</p>
+                    <p className="mb-2">نام: {profile.full_name || '---'}</p>
+                    <p>تماس: {profile.phone || '---'}</p>
                   </div>
                   <Button variant="gradient" onClick={downloadCard} className="gap-2 mt-4">
                     <Download className="w-4 h-4" />
@@ -416,9 +428,9 @@ const Profile = () => {
             )}
 
             {activeTab === 'proposal' && (
-              <div className="relative rounded-xl p-6 bg-card shadow-xl overflow-hidden border border-border/50 space-y-6">
+              <div className="relative rounded-xl p-6 bg-card shadow-xl overflow-hidden border border-border/50">
                 <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-accent/5 pointer-events-none" />
-                <div className="relative z-10">
+                <div className="relative z-10 space-y-6">
                   <h2 className="text-xl font-semibold">پروپوزال من</h2>
                   <div className="flex gap-4 flex-wrap mt-4">
                     <Button variant="outline" asChild className="gap-2">
