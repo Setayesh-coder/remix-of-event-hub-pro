@@ -67,7 +67,7 @@ const Index = () => {
                 {/* دکمه‌ها – وسط‌چین و با فاصله مناسب */}
                 <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
 
-                  <Link to="/Courses" className="inline-block">
+                  <Link to="/courses" className="inline-block">
                     <LiquidGlassCard
                       blurIntensity="xl"
                       glowIntensity="md"
@@ -84,7 +84,7 @@ const Index = () => {
                     </LiquidGlassCard>
                   </Link>
 
-                  <Link to="/Register" className="inline-block">
+                  <Link to="/register" className="inline-block">
                     <LiquidGlassCard
                       blurIntensity="lg"
                       glowIntensity="sm"

@@ -14,24 +14,9 @@ const Navbar = () => {
 
   const navItems = [
     { label: 'گالری', href: '/gallery', icon: Image },
-    {
-      label: 'آموزش', href: '/courses', icon: BookOpen,
-      // children: [
-      //   { label: 'کارگاه', href: '/courses/workshop' },
-      //   { label: 'وبینار', href: '/courses/webinar' },
-      //   { label: 'دوره‌ها', href: '/courses/training' },
-      // ],
-    },
+    { label: 'آموزش', href: '/courses', icon: BookOpen },
     { label: 'برنامه‌ها و زمانبندی', href: '/schedule', icon: Calendar },
-    // {
-    //   label: 'ثبت نام و ورود',
-    //   icon: LogIn,
-    //   children: [
-    //     { label: 'ورود', href: '/login' },
-    //     { label: 'ثبت نام', href: '/register' },
-    //     { label: 'پروفایل', href: '/profile' },
-    //   ],
-    // },
+    { label: 'ورود', href: '/login', icon: LogIn },
   ];
 
   return (
