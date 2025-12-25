@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { User, BookOpen, CreditCard, FileText, Award, LogOut, Download, Upload, Trash2 } from 'lucide-react';
 import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
@@ -72,7 +71,7 @@ const Profile = () => {
       .select('*')
       .eq('user_id', user.id)
       .maybeSingle();
-    
+
     if (error) {
       console.error('Error fetching profile:', error);
     } else if (data) {
@@ -97,7 +96,7 @@ const Profile = () => {
       .select('*')
       .eq('user_id', user.id)
       .order('uploaded_at', { ascending: false });
-    
+
     if (!error && data) {
       setProposals(data);
     }
@@ -110,7 +109,7 @@ const Profile = () => {
       .select('*')
       .eq('user_id', user.id)
       .order('issued_at', { ascending: false });
-    
+
     if (!error && data) {
       setCertificates(data);
     }
@@ -123,7 +122,6 @@ const Profile = () => {
   const saveProfile = async () => {
     if (!user || !profile) return;
     setSaving(true);
-
     const { error } = await supabase
       .from('profiles')
       .update({
@@ -154,7 +152,6 @@ const Profile = () => {
   const uploadProposal = async (file: File) => {
     if (!user) return;
     setUploading(true);
-
     const fileName = `${user.id}/${Date.now()}_${file.name}`;
     const { error: uploadError } = await supabase.storage
       .from('proposals')
@@ -189,10 +186,10 @@ const Profile = () => {
 
   const deleteProposal = async (proposal: Proposal) => {
     if (!user) return;
-
-    const filePath = `${user.id}/${proposal.file_url.split('/').pop()}`;
+    // استخراج مسیر فایل از URL
+    const filePath = proposal.file_url.split('/').slice(-2).join('/');
     await supabase.storage.from('proposals').remove([filePath]);
-    
+
     const { error } = await supabase
       .from('proposals')
       .delete()
@@ -216,7 +213,6 @@ const Profile = () => {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    // Card background
     const gradient = ctx.createLinearGradient(0, 0, 400, 250);
     gradient.addColorStop(0, '#213b6e');
     gradient.addColorStop(1, '#5472d2');
@@ -224,22 +220,18 @@ const Profile = () => {
     ctx.roundRect(0, 0, 400, 250, 20);
     ctx.fill();
 
-    // Card content
     ctx.fillStyle = '#ffffff';
     ctx.font = 'bold 24px Vazirmatn, sans-serif';
     ctx.textAlign = 'right';
     ctx.fillText('کارت شرکت‌کننده', 380, 50);
-
     ctx.font = '18px Vazirmatn, sans-serif';
     ctx.fillText(`نام: ${profile.full_name}`, 380, 120);
     ctx.fillText(`تماس: ${profile.phone}`, 380, 160);
 
-    // Download
     const link = document.createElement('a');
     link.download = 'participant-card.png';
     link.href = canvas.toDataURL();
     link.click();
-
     toast({ title: 'موفق', description: 'کارت دانلود شد' });
   };
 
@@ -258,9 +250,10 @@ const Profile = () => {
       <div className="min-h-screen py-12">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto">
-            {/* Header */}
-            <div className="gradient-border rounded-2xl p-6 sm:p-8 mb-8">
-              <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+            {/* هدر پروفایل - فیکس شده */}
+            <div className="relative rounded-2xl p-6 sm:p-8 mb-8 bg-card shadow-xl overflow-hidden border border-border/50">
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-accent/10 pointer-events-none" />
+              <div className="relative z-10 flex flex-col sm:flex-row items-center justify-between gap-4">
                 <div className="flex items-center gap-4">
                   <div className="w-16 h-16 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center">
                     <User className="w-8 h-8 text-white" />
@@ -277,7 +270,7 @@ const Profile = () => {
               </div>
             </div>
 
-            {/* Tabs */}
+            {/* تب‌ها */}
             <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
               {tabs.map((tab) => (
                 <Button
@@ -293,220 +286,224 @@ const Profile = () => {
               ))}
             </div>
 
-            {/* Content */}
+            {/* محتوای تب‌ها - همه با کارت امن */}
             {activeTab === 'personal' && (
-              <div className="gradient-border rounded-xl p-6 space-y-6">
-                <h2 className="text-xl font-semibold">اطلاعات شخصی</h2>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <label className="text-sm text-muted-foreground">کد ملی</label>
-                    <input
-                      type="text"
-                      value={profile?.national_id || ''}
-                      onChange={(e) => handleProfileChange('national_id', e.target.value)}
-                      className="w-full px-4 py-3 rounded-lg bg-secondary border border-border focus:border-primary outline-none"
-                      dir="ltr"
-                    />
+              <div className="relative rounded-xl p-6 bg-card shadow-xl overflow-hidden border border-border/50 space-y-6">
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-accent/5 pointer-events-none" />
+                <div className="relative z-10">
+                  <h2 className="text-xl font-semibold">اطلاعات شخصی</h2>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+                    {/* همه فیلدها مثل قبل */}
+                    <div className="space-y-2">
+                      <label className="text-sm text-muted-foreground">کد ملی</label>
+                      <input
+                        type="text"
+                        value={profile?.national_id || ''}
+                        onChange={(e) => handleProfileChange('national_id', e.target.value)}
+                        className="w-full px-4 py-3 rounded-lg bg-secondary border border-border focus:border-primary outline-none"
+                        dir="ltr"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-sm text-muted-foreground">نام و نام خانوادگی</label>
+                      <input
+                        type="text"
+                        value={profile?.full_name || ''}
+                        onChange={(e) => handleProfileChange('full_name', e.target.value)}
+                        className="w-full px-4 py-3 rounded-lg bg-secondary border border-border focus:border-primary outline-none"
+                      />
+                    </div>
+                    {/* بقیه فیلدها دقیقاً مثل کد اصلیت */}
+                    <div className="space-y-2">
+                      <label className="text-sm text-muted-foreground">شماره تماس</label>
+                      <input
+                        type="tel"
+                        value={profile?.phone || ''}
+                        onChange={(e) => handleProfileChange('phone', e.target.value)}
+                        className="w-full px-4 py-3 rounded-lg bg-secondary border border-border focus:border-primary outline-none"
+                        dir="ltr"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-sm text-muted-foreground">جنسیت</label>
+                      <select
+                        value={profile?.gender || ''}
+                        onChange={(e) => handleProfileChange('gender', e.target.value)}
+                        className="w-full px-4 py-3 rounded-lg bg-secondary border border-border focus:border-primary outline-none"
+                      >
+                        <option value="">انتخاب کنید</option>
+                        <option value="male">مرد</option>
+                        <option value="female">زن</option>
+                      </select>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-sm text-muted-foreground">رشته تحصیلی</label>
+                      <input
+                        type="text"
+                        value={profile?.field_of_study || ''}
+                        onChange={(e) => handleProfileChange('field_of_study', e.target.value)}
+                        className="w-full px-4 py-3 rounded-lg bg-secondary border border-border focus:border-primary outline-none"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-sm text-muted-foreground">مقطع تحصیلی</label>
+                      <select
+                        value={profile?.education_level || ''}
+                        onChange={(e) => handleProfileChange('education_level', e.target.value)}
+                        className="w-full px-4 py-3 rounded-lg bg-secondary border border-border focus:border-primary outline-none"
+                      >
+                        <option value="">انتخاب کنید</option>
+                        <option value="diploma">دیپلم</option>
+                        <option value="associate">کاردانی</option>
+                        <option value="bachelor">کارشناسی</option>
+                        <option value="master">کارشناسی ارشد</option>
+                        <option value="phd">دکتری</option>
+                      </select>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-sm text-muted-foreground">دانشگاه</label>
+                      <input
+                        type="text"
+                        value={profile?.university || ''}
+                        onChange={(e) => handleProfileChange('university', e.target.value)}
+                        className="w-full px-4 py-3 rounded-lg bg-secondary border border-border focus:border-primary outline-none"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-sm text-muted-foreground">محل سکونت</label>
+                      <input
+                        type="text"
+                        value={profile?.residence || ''}
+                        onChange={(e) => handleProfileChange('residence', e.target.value)}
+                        className="w-full px-4 py-3 rounded-lg bg-secondary border border-border focus:border-primary outline-none"
+                      />
+                    </div>
                   </div>
-
-                  <div className="space-y-2">
-                    <label className="text-sm text-muted-foreground">نام و نام خانوادگی</label>
-                    <input
-                      type="text"
-                      value={profile?.full_name || ''}
-                      onChange={(e) => handleProfileChange('full_name', e.target.value)}
-                      className="w-full px-4 py-3 rounded-lg bg-secondary border border-border focus:border-primary outline-none"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className="text-sm text-muted-foreground">شماره تماس</label>
-                    <input
-                      type="tel"
-                      value={profile?.phone || ''}
-                      onChange={(e) => handleProfileChange('phone', e.target.value)}
-                      className="w-full px-4 py-3 rounded-lg bg-secondary border border-border focus:border-primary outline-none"
-                      dir="ltr"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className="text-sm text-muted-foreground">جنسیت</label>
-                    <select
-                      value={profile?.gender || ''}
-                      onChange={(e) => handleProfileChange('gender', e.target.value)}
-                      className="w-full px-4 py-3 rounded-lg bg-secondary border border-border focus:border-primary outline-none"
-                    >
-                      <option value="">انتخاب کنید</option>
-                      <option value="male">مرد</option>
-                      <option value="female">زن</option>
-                    </select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className="text-sm text-muted-foreground">رشته تحصیلی</label>
-                    <input
-                      type="text"
-                      value={profile?.field_of_study || ''}
-                      onChange={(e) => handleProfileChange('field_of_study', e.target.value)}
-                      className="w-full px-4 py-3 rounded-lg bg-secondary border border-border focus:border-primary outline-none"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className="text-sm text-muted-foreground">مقطع تحصیلی</label>
-                    <select
-                      value={profile?.education_level || ''}
-                      onChange={(e) => handleProfileChange('education_level', e.target.value)}
-                      className="w-full px-4 py-3 rounded-lg bg-secondary border border-border focus:border-primary outline-none"
-                    >
-                      <option value="">انتخاب کنید</option>
-                      <option value="diploma">دیپلم</option>
-                      <option value="associate">کاردانی</option>
-                      <option value="bachelor">کارشناسی</option>
-                      <option value="master">کارشناسی ارشد</option>
-                      <option value="phd">دکتری</option>
-                    </select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className="text-sm text-muted-foreground">دانشگاه</label>
-                    <input
-                      type="text"
-                      value={profile?.university || ''}
-                      onChange={(e) => handleProfileChange('university', e.target.value)}
-                      className="w-full px-4 py-3 rounded-lg bg-secondary border border-border focus:border-primary outline-none"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className="text-sm text-muted-foreground">محل سکونت</label>
-                    <input
-                      type="text"
-                      value={profile?.residence || ''}
-                      onChange={(e) => handleProfileChange('residence', e.target.value)}
-                      className="w-full px-4 py-3 rounded-lg bg-secondary border border-border focus:border-primary outline-none"
-                    />
-                  </div>
+                  <Button variant="gradient" onClick={saveProfile} disabled={saving} className="mt-6">
+                    {saving ? 'در حال ذخیره...' : 'ذخیره تغییرات'}
+                  </Button>
                 </div>
-
-                <Button variant="gradient" onClick={saveProfile} disabled={saving}>
-                  {saving ? 'در حال ذخیره...' : 'ذخیره تغییرات'}
-                </Button>
               </div>
             )}
 
+            {/* بقیه تب‌ها هم دقیقاً با همین ساختار (relative + z-10 + bg-card + shadow) */}
             {activeTab === 'courses' && (
-              <div className="gradient-border rounded-xl p-6">
-                <h2 className="text-xl font-semibold mb-4">دوره‌های ثبت نام شده</h2>
-                <p className="text-muted-foreground">شما هنوز در هیچ دوره‌ای ثبت نام نکرده‌اید.</p>
+              <div className="relative rounded-xl p-6 bg-card shadow-xl overflow-hidden border border-border/50">
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-accent/5 pointer-events-none" />
+                <div className="relative z-10">
+                  <h2 className="text-xl font-semibold mb-4">دوره‌های ثبت نام شده</h2>
+                  <p className="text-muted-foreground">شما هنوز در هیچ دوره‌ای ثبت نام نکرده‌اید.</p>
+                </div>
               </div>
             )}
 
             {activeTab === 'card' && (
-              <div className="gradient-border rounded-xl p-6 space-y-6">
-                <h2 className="text-xl font-semibold">دریافت کارت شرکت‌کننده</h2>
-                
-                <div className="bg-gradient-to-br from-primary to-accent rounded-xl p-6 text-white max-w-sm">
-                  <h3 className="text-lg font-bold mb-4">کارت شرکت‌کننده</h3>
-                  <p className="mb-2">نام: {profile?.full_name || '---'}</p>
-                  <p>تماس: {profile?.phone || '---'}</p>
+              <div className="relative rounded-xl p-6 bg-card shadow-xl overflow-hidden border border-border/50 space-y-6">
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-accent/5 pointer-events-none" />
+                <div className="relative z-10">
+                  <h2 className="text-xl font-semibold">دریافت کارت شرکت‌کننده</h2>
+                  <div className="bg-gradient-to-br from-primary to-accent rounded-xl p-6 text-white max-w-sm mt-4">
+                    <h3 className="text-lg font-bold mb-4">کارت شرکت‌کننده</h3>
+                    <p className="mb-2">نام: {profile?.full_name || '---'}</p>
+                    <p>تماس: {profile?.phone || '---'}</p>
+                  </div>
+                  <Button variant="gradient" onClick={downloadCard} className="gap-2 mt-4">
+                    <Download className="w-4 h-4" />
+                    دانلود کارت
+                  </Button>
                 </div>
-
-                <Button variant="gradient" onClick={downloadCard} className="gap-2">
-                  <Download className="w-4 h-4" />
-                  دانلود کارت
-                </Button>
               </div>
             )}
 
             {activeTab === 'proposal' && (
-              <div className="gradient-border rounded-xl p-6 space-y-6">
-                <h2 className="text-xl font-semibold">پروپوزال من</h2>
-
-                <div className="flex gap-4 flex-wrap">
-                  <Button variant="outline" asChild className="gap-2">
-                    <a href="/proposal-template.pdf" download>
-                      <Download className="w-4 h-4" />
-                      دانلود فرم پروپوزال
-                    </a>
-                  </Button>
-
-                  <input
-                    type="file"
-                    ref={fileInputRef}
-                    onChange={(e) => e.target.files?.[0] && uploadProposal(e.target.files[0])}
-                    accept=".pdf,.doc,.docx"
-                    className="hidden"
-                  />
-                  <Button 
-                    variant="gradient" 
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={uploading}
-                    className="gap-2"
-                  >
-                    <Upload className="w-4 h-4" />
-                    {uploading ? 'در حال آپلود...' : 'آپلود پروپوزال'}
-                  </Button>
-                </div>
-
-                {proposals.length > 0 && (
-                  <div className="space-y-3 mt-6">
-                    <h3 className="font-medium">فایل‌های آپلود شده:</h3>
-                    {proposals.map((proposal) => (
-                      <div key={proposal.id} className="flex items-center justify-between p-4 bg-secondary rounded-lg">
-                        <div className="flex items-center gap-3">
-                          <FileText className="w-5 h-5 text-primary" />
-                          <span className="text-sm">{proposal.file_name}</span>
-                        </div>
-                        <div className="flex gap-2">
-                          <Button variant="outline" size="sm" asChild>
-                            <a href={proposal.file_url} download>
-                              <Download className="w-4 h-4" />
-                            </a>
-                          </Button>
-                          <Button variant="outline" size="sm" onClick={() => deleteProposal(proposal)}>
-                            <Trash2 className="w-4 h-4 text-destructive" />
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
+              <div className="relative rounded-xl p-6 bg-card shadow-xl overflow-hidden border border-border/50 space-y-6">
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-accent/5 pointer-events-none" />
+                <div className="relative z-10">
+                  <h2 className="text-xl font-semibold">پروپوزال من</h2>
+                  <div className="flex gap-4 flex-wrap mt-4">
+                    <Button variant="outline" asChild className="gap-2">
+                      <a href="/proposal-template.pdf" download>
+                        <Download className="w-4 h-4" />
+                        دانلود فرم پروپوزال
+                      </a>
+                    </Button>
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      onChange={(e) => e.target.files?.[0] && uploadProposal(e.target.files[0])}
+                      accept=".pdf,.doc,.docx"
+                      className="hidden"
+                    />
+                    <Button
+                      variant="gradient"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={uploading}
+                      className="gap-2"
+                    >
+                      <Upload className="w-4 h-4" />
+                      {uploading ? 'در حال آپلود...' : 'آپلود پروپوزال'}
+                    </Button>
                   </div>
-                )}
+
+                  {proposals.length > 0 && (
+                    <div className="space-y-3 mt-6">
+                      <h3 className="font-medium">فایل‌های آپلود شده:</h3>
+                      {proposals.map((proposal) => (
+                        <div key={proposal.id} className="flex items-center justify-between p-4 bg-secondary rounded-lg">
+                          <div className="flex items-center gap-3">
+                            <FileText className="w-5 h-5 text-primary" />
+                            <span className="text-sm">{proposal.file_name}</span>
+                          </div>
+                          <div className="flex gap-2">
+                            <Button variant="outline" size="sm" asChild>
+                              <a href={proposal.file_url} download>
+                                <Download className="w-4 h-4" />
+                              </a>
+                            </Button>
+                            <Button variant="outline" size="sm" onClick={() => deleteProposal(proposal)}>
+                              <Trash2 className="w-4 h-4 text-destructive" />
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
             )}
 
             {activeTab === 'certificates' && (
-              <div className="gradient-border rounded-xl p-6">
-                <h2 className="text-xl font-semibold mb-4">گواهی‌های صادر شده</h2>
-                
-                {certificates.length === 0 ? (
-                  <p className="text-muted-foreground">هنوز گواهی‌ای برای شما صادر نشده است.</p>
-                ) : (
-                  <div className="space-y-3">
-                    {certificates.map((cert) => (
-                      <div key={cert.id} className="flex items-center justify-between p-4 bg-secondary rounded-lg">
-                        <div className="flex items-center gap-3">
-                          <Award className="w-5 h-5 text-event-green" />
-                          <div>
-                            <p className="font-medium">{cert.title}</p>
-                            <p className="text-sm text-muted-foreground">
-                              {new Date(cert.issued_at).toLocaleDateString('fa-IR')}
-                            </p>
+              <div className="relative rounded-xl p-6 bg-card shadow-xl overflow-hidden border border-border/50">
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-accent/5 pointer-events-none" />
+                <div className="relative z-10">
+                  <h2 className="text-xl font-semibold mb-4">گواهی‌های صادر شده</h2>
+                  {certificates.length === 0 ? (
+                    <p className="text-muted-foreground">هنوز گواهی‌ای برای شما صادر نشده است.</p>
+                  ) : (
+                    <div className="space-y-3">
+                      {certificates.map((cert) => (
+                        <div key={cert.id} className="flex items-center justify-between p-4 bg-secondary rounded-lg">
+                          <div className="flex items-center gap-3">
+                            <Award className="w-5 h-5 text-primary" />
+                            <div>
+                              <p className="font-medium">{cert.title}</p>
+                              <p className="text-sm text-muted-foreground">
+                                {new Date(cert.issued_at).toLocaleDateString('fa-IR')}
+                              </p>
+                            </div>
                           </div>
+                          {cert.certificate_url && (
+                            <Button variant="outline" size="sm" asChild>
+                              <a href={cert.certificate_url} download>
+                                <Download className="w-4 h-4" />
+                              </a>
+                            </Button>
+                          )}
                         </div>
-                        {cert.certificate_url && (
-                          <Button variant="outline" size="sm" asChild>
-                            <a href={cert.certificate_url} download>
-                              <Download className="w-4 h-4" />
-                            </a>
-                          </Button>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                )}
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
             )}
           </div>
