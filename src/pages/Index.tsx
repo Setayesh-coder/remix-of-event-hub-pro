@@ -16,22 +16,22 @@ const Index = () => {
         <div
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
           style={{
-            backgroundImage: `url('https://cdn.expertphotography.com/wp-content/uploads/2019/09/photography-quality-images-landscape.jpg')`,
+            backgroundImage: `url('src/assets/hero-bg.jpg')`,
           }}
         >
-          <div className="absolute inset-0 bg-black/60" /> {/* تاریکی بیشتر برای خوانایی بهتر */}
+          <div className="absolute inset-0 bg-black/60" />
         </div>
 
-        {/* تمام محتوا روی یک لایه مرکزی و کاملاً وسط‌چین */}
+
         <div className="relative z-10 w-full">
           <div className="container mx-auto px-6 lg:px-8">
             <div className="flex flex-col items-center justify-center gap-12 lg:gap-20 max-w-7xl mx-auto">
-              {/* بخش اصلی متن و دکمه‌ها – کاملاً وسط‌چین در همه سایزها */}
+
               <div className="text-center space-y-10 max-w-xl">
                 {/* عنوان اصلی */}
                 <div className="space-y-6">
                   <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold text-white tracking-wider opacity-90 leading-tight">
-                    جوانه <span className="block text-4xl md:text-6xl lg:text-7xl opacity-80">سورایا</span>
+                    جوانه<span className="block text-4xl md:text-6xl lg:text-7xl opacity-80">ثریا</span>
                   </h1>
                   <div className="text-4xl md:text-6xl lg:text-7xl font-bold text-white/90 space-y-2 opacity-80 leading-tight">
                     <p className="text-5xl md:text-7xl lg:text-8xl">JAVANEH</p>
@@ -41,7 +41,7 @@ const Index = () => {
                     <p className="text-4xl md:text-6xl lg:text-7xl">EVENT</p>
                   </div>
                 </div>
-                {/* تایمر – کوچک‌تر و ریسپانسیو */}
+                {/* تایمر  */}
                 <div className="w-full max-w-xs mx-auto">
                   <LiquidGlassCard
                     blurIntensity="lg"
@@ -64,7 +64,7 @@ const Index = () => {
                   جهت ثبت‌نام در رویداد لطفا کلیک کنید.
                 </p>
 
-                {/* دکمه‌ها – وسط‌چین و با فاصله مناسب */}
+                {/* دکمه‌ها*/}
                 <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
 
                   <Link to="/courses" className="inline-block">
@@ -108,7 +108,7 @@ const Index = () => {
 
                 </div></div>
             </div>
-            {/* لوگوهای اسپانسر – پایین و وسط */}
+            {/* لوگوهای اسپانسر */}
             <div className="flex justify-center gap-8 pt-20 pb-10">
               {[1, 2, 3, 4].map((i) => (
                 <LiquidGlassCard

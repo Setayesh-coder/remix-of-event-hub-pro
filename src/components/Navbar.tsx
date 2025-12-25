@@ -16,7 +16,7 @@ const Navbar = () => {
     { label: 'گالری', href: '/gallery', icon: Image },
     { label: 'آموزش', href: '/courses', icon: BookOpen },
     { label: 'برنامه‌ها و زمانبندی', href: '/schedule', icon: Calendar },
-    { label: 'ورود', href: '/login', icon: LogIn },
+    { label: 'ایونت', href: '/', icon: LogIn },
   ];
 
   return (
@@ -24,7 +24,7 @@ const Navbar = () => {
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-2">
+          <Link to="https://microinnovate.ir/" className="flex items-center gap-2">
             <div className="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center">
               <span className="text-white font-bold text-lg">ME</span>
             </div>
