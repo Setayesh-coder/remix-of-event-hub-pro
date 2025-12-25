@@ -28,7 +28,7 @@ const Courses = () => {
     { id: 'all', label: 'همه', icon: BookOpen },
     { id: 'workshop', label: 'کارگاه', icon: Wrench },
     { id: 'webinar', label: 'وبینار', icon: Video },
-    { id: 'training', label: 'دوره ', icon: BookOpen },
+    { id: 'training', label: 'دوره', icon: BookOpen },
   ] as const;
 
   const courses: Course[] = [
@@ -129,7 +129,7 @@ const Courses = () => {
           {/* Header */}
           <div className="text-center mb-12">
             <h1 className="text-4xl sm:text-5xl font-bold mb-4">
-              دوره‌های <span className="gradient-text">آموزشی</span>
+              دوره‌های <span className="text-primary">آموزشی</span>
             </h1>
             <p className="text-muted-foreground max-w-xl mx-auto">
               با شرکت در دوره‌های تخصصی ما، مهارت‌های خود را در حوزه میکروالکترونیک ارتقا دهید
@@ -158,10 +158,13 @@ const Courses = () => {
               return (
                 <div
                   key={course.id}
-                  className="gradient-border rounded-xl overflow-hidden hover:glow transition-all duration-300 animate-fade-in group"
+                  className="relative rounded-xl overflow-hidden bg-card shadow-xl hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 group"
                   style={{ animationDelay: `${index * 100}ms` }}
                 >
-                  {/* Image */}
+                  {/* پس‌زمینه gradient ملایم برای افکت glow */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-accent/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+
+                  {/* تصویر / آیکون */}
                   <div className="aspect-video bg-gradient-to-br from-secondary to-muted flex items-center justify-center relative overflow-hidden">
                     <CategoryIcon className="w-16 h-16 text-primary/50 group-hover:scale-110 transition-transform duration-300" />
                     {course.price === 0 && (
@@ -176,8 +179,8 @@ const Courses = () => {
                     )}
                   </div>
 
-                  {/* Content */}
-                  <div className="p-5 space-y-4">
+                  {/* محتوای کارت */}
+                  <div className="p-5 space-y-4 relative z-10">
                     <div className="flex items-center gap-2">
                       <Badge variant="secondary" className="text-xs">
                         {categories.find((c) => c.id === course.category)?.label}
@@ -222,7 +225,7 @@ const Courses = () => {
                           </span>
                         )}
                       </div>
-                      <Button variant="neon" size="sm">
+                      <Button variant="default" size="sm" className="bg-primary hover:bg-primary/90">
                         ثبت نام
                       </Button>
                     </div>

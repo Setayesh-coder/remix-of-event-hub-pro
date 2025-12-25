@@ -136,7 +136,7 @@ const Navbar = () => {
               <div className="pt-4 px-4">
                 <Button className="w-full bg-white text-primary hover:bg-white/90" asChild>
                   <Link to="/Profile" onClick={() => setIsOpen(false)}>
-                    خرید دوره‌ها
+                    پروفایل
                   </Link>
                 </Button>
               </div>
