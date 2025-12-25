@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ChevronDown, Menu, X, User, Image, BookOpen, Calendar, LogIn } from 'lucide-react';
+import { ChevronDown, Menu, X, User, Image, BookOpen, Calendar, LogIn, HomeIcon, Ticket } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -13,10 +13,10 @@ const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
 
   const navItems = [
+    { label: 'رویداد', href: '/', icon: Ticket },
     { label: 'گالری', href: '/gallery', icon: Image },
     { label: 'آموزش', href: '/courses', icon: BookOpen },
     { label: 'برنامه‌ها و زمانبندی', href: '/schedule', icon: Calendar },
-    { label: 'ایونت', href: '/', icon: LogIn },
   ];
 
   return (

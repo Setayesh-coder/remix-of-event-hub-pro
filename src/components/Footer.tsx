@@ -30,7 +30,7 @@ const Footer = () => {
               </li>
               <li>
                 <Link to="/courses" className="text-white/70 hover:text-white transition-colors text-sm">
-                  دوره‌ها
+                  آموزش
                 </Link>
               </li>
               <li>
