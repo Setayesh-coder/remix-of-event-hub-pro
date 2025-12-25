@@ -1,28 +1,35 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { Clock, Users, Star, BookOpen, Video, Wrench } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Clock, Users, Star, BookOpen, Video, Wrench, ShoppingCart, Check } from 'lucide-react';
 import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from '@/hooks/use-toast';
 
 type CourseCategory = 'all' | 'workshop' | 'webinar' | 'training';
 
 interface Course {
-  id: number;
+  id: string;
   title: string;
-  description: string;
+  description: string | null;
   price: number;
-  originalPrice?: number;
-  duration: string;
-  students: number;
-  rating: number;
+  original_price: number | null;
+  duration: string | null;
   category: 'workshop' | 'webinar' | 'training';
-  instructor: string;
-  image?: string;
+  instructor: string | null;
+  image_url: string | null;
 }
 
 const Courses = () => {
   const [activeCategory, setActiveCategory] = useState<CourseCategory>('all');
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [cartItems, setCartItems] = useState<string[]>([]);
+  const [purchasedCourses, setPurchasedCourses] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
+  const navigate = useNavigate();
 
   const categories = [
     { id: 'all', label: 'همه', icon: BookOpen },
@@ -31,76 +38,109 @@ const Courses = () => {
     { id: 'training', label: 'دوره', icon: BookOpen },
   ] as const;
 
-  const courses: Course[] = [
-    {
-      id: 1,
-      title: 'طراحی مدار چاپی PCB',
-      description: 'آموزش کامل طراحی PCB با نرم‌افزار Altium Designer',
-      price: 2500000,
-      originalPrice: 3500000,
-      duration: '۱۲ ساعت',
-      students: 156,
-      rating: 4.8,
-      category: 'workshop',
-      instructor: 'دکتر احمدی',
-    },
-    {
-      id: 2,
-      title: 'میکروکنترلر ARM',
-      description: 'برنامه‌نویسی میکروکنترلرهای ARM Cortex-M',
-      price: 1800000,
-      duration: '۸ ساعت',
-      students: 234,
-      rating: 4.9,
-      category: 'training',
-      instructor: 'مهندس رضایی',
-    },
-    {
-      id: 3,
-      title: 'IoT و اینترنت اشیا',
-      description: 'آشنایی با پروتکل‌های IoT و پیاده‌سازی پروژه',
-      price: 0,
-      duration: '۲ ساعت',
-      students: 512,
-      rating: 4.7,
-      category: 'webinar',
-      instructor: 'دکتر محمدی',
-    },
-    {
-      id: 4,
-      title: 'الکترونیک قدرت',
-      description: 'طراحی منابع تغذیه سوئیچینگ',
-      price: 3200000,
-      originalPrice: 4000000,
-      duration: '۱۶ ساعت',
-      students: 89,
-      rating: 4.6,
-      category: 'workshop',
-      instructor: 'مهندس کریمی',
-    },
-    {
-      id: 5,
-      title: 'FPGA و VHDL',
-      description: 'برنامه‌نویسی FPGA با زبان VHDL',
-      price: 2800000,
-      duration: '۱۰ ساعت',
-      students: 67,
-      rating: 4.9,
-      category: 'training',
-      instructor: 'دکتر حسینی',
-    },
-    {
-      id: 6,
-      title: 'سنسورها و ابزار دقیق',
-      description: 'آشنایی با انواع سنسورها و کاربردهای آن‌ها',
-      price: 0,
-      duration: '۱.۵ ساعت',
-      students: 423,
-      rating: 4.5,
-      category: 'webinar',
-      instructor: 'مهندس علوی',
-    },
-  ];
+  useEffect(() => {
+    fetchCourses();
+    if (user) {
+      fetchCartItems();
+      fetchPurchasedCourses();
+    }
+  }, [user]);
+
+  const fetchCourses = async () => {
+    const { data, error } = await supabase
+      .from('courses')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (!error && data) {
+      setCourses(data as Course[]);
+    }
+    setLoading(false);
+  };
+
+  const fetchCartItems = async () => {
+    if (!user) return;
+    const { data } = await supabase
+      .from('cart_items')
+      .select('course_id')
+      .eq('user_id', user.id);
+
+    if (data) {
+      setCartItems(data.map(item => item.course_id));
+    }
+  };
+
+  const fetchPurchasedCourses = async () => {
+    if (!user) return;
+    const { data } = await supabase
+      .from('user_courses')
+      .select('course_id')
+      .eq('user_id', user.id);
+
+    if (data) {
+      setPurchasedCourses(data.map(item => item.course_id));
+    }
+  };
+
+  const addToCart = async (courseId: string) => {
+    if (!user) {
+      toast({ 
+        title: 'ورود به سایت', 
+        description: 'لطفاً ابتدا وارد حساب کاربری خود شوید',
+        variant: 'destructive'
+      });
+      navigate('/login');
+      return;
+    }
+
+    const { error } = await supabase
+      .from('cart_items')
+      .insert({
+        user_id: user.id,
+        course_id: courseId,
+      });
+
+    if (error) {
+      if (error.code === '23505') {
+        toast({ title: 'توجه', description: 'این دوره قبلاً به سبد خرید اضافه شده است' });
+      } else {
+        toast({ title: 'خطا', description: 'خطا در افزودن به سبد خرید', variant: 'destructive' });
+      }
+    } else {
+      setCartItems(prev => [...prev, courseId]);
+      toast({ title: 'موفق', description: 'دوره به سبد خرید اضافه شد' });
+    }
+  };
+
+  const registerFreeCourse = async (courseId: string) => {
+    if (!user) {
+      toast({ 
+        title: 'ورود به سایت', 
+        description: 'لطفاً ابتدا وارد حساب کاربری خود شوید',
+        variant: 'destructive'
+      });
+      navigate('/login');
+      return;
+    }
+
+    const { error } = await supabase
+      .from('user_courses')
+      .insert({
+        user_id: user.id,
+        course_id: courseId,
+      });
+
+    if (error) {
+      if (error.code === '23505') {
+        toast({ title: 'توجه', description: 'شما قبلاً در این دوره ثبت نام کرده‌اید' });
+      } else {
+        toast({ title: 'خطا', description: 'خطا در ثبت نام', variant: 'destructive' });
+      }
+    } else {
+      setPurchasedCourses(prev => [...prev, courseId]);
+      toast({ title: 'موفق', description: 'ثبت نام با موفقیت انجام شد' });
+    }
+  };
 
   const filteredCourses = activeCategory === 'all'
     ? courses
@@ -121,6 +161,16 @@ const Courses = () => {
         return BookOpen;
     }
   };
+
+  if (loading) {
+    return (
+      <Layout>
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-lg">در حال بارگذاری...</div>
+        </div>
+      </Layout>
+    );
+  }
 
   return (
     <Layout>
@@ -155,6 +205,9 @@ const Courses = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredCourses.map((course, index) => {
               const CategoryIcon = getCategoryIcon(course.category);
+              const isInCart = cartItems.includes(course.id);
+              const isPurchased = purchasedCourses.includes(course.id);
+
               return (
                 <div
                   key={course.id}
@@ -172,7 +225,7 @@ const Courses = () => {
                         رایگان
                       </Badge>
                     )}
-                    {course.originalPrice && (
+                    {course.original_price && (
                       <Badge className="absolute top-3 right-3 bg-destructive">
                         تخفیف
                       </Badge>
@@ -196,38 +249,62 @@ const Courses = () => {
                     </p>
 
                     <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                      <span className="flex items-center gap-1">
-                        <Clock className="w-4 h-4" />
-                        {course.duration}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <Users className="w-4 h-4" />
-                        {course.students} نفر
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <Star className="w-4 h-4 fill-primary text-primary" />
-                        {course.rating}
-                      </span>
+                      {course.duration && (
+                        <span className="flex items-center gap-1">
+                          <Clock className="w-4 h-4" />
+                          {course.duration}
+                        </span>
+                      )}
                     </div>
 
-                    <p className="text-sm text-muted-foreground">
-                      مدرس: {course.instructor}
-                    </p>
+                    {course.instructor && (
+                      <p className="text-sm text-muted-foreground">
+                        مدرس: {course.instructor}
+                      </p>
+                    )}
 
                     <div className="flex items-center justify-between pt-4 border-t border-border">
                       <div className="space-y-1">
                         <span className="text-xl font-bold text-primary">
                           {formatPrice(course.price)}
                         </span>
-                        {course.originalPrice && (
+                        {course.original_price && (
                           <span className="block text-sm text-muted-foreground line-through">
-                            {formatPrice(course.originalPrice)}
+                            {formatPrice(course.original_price)}
                           </span>
                         )}
                       </div>
-                      <Button variant="default" size="sm" className="bg-primary hover:bg-primary/90">
-                        ثبت نام
-                      </Button>
+
+                      {isPurchased ? (
+                        <Button variant="outline" size="sm" disabled className="gap-2">
+                          <Check className="w-4 h-4" />
+                          ثبت نام شده
+                        </Button>
+                      ) : course.price === 0 ? (
+                        <Button 
+                          variant="default" 
+                          size="sm" 
+                          className="bg-primary hover:bg-primary/90"
+                          onClick={() => registerFreeCourse(course.id)}
+                        >
+                          ثبت نام رایگان
+                        </Button>
+                      ) : isInCart ? (
+                        <Button variant="outline" size="sm" disabled className="gap-2">
+                          <ShoppingCart className="w-4 h-4" />
+                          در سبد خرید
+                        </Button>
+                      ) : (
+                        <Button 
+                          variant="default" 
+                          size="sm" 
+                          className="bg-primary hover:bg-primary/90 gap-2"
+                          onClick={() => addToCart(course.id)}
+                        >
+                          <ShoppingCart className="w-4 h-4" />
+                          افزودن به سبد
+                        </Button>
+                      )}
                     </div>
                   </div>
                 </div>
