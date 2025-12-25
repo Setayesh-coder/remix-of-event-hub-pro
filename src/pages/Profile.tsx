@@ -222,8 +222,13 @@ const Profile = () => {
   };
 
   const handleLogout = async () => {
-    await signOut();
-    navigate('/');
+    try {
+      await signOut();
+      toast({ title: 'خروج موفق', description: 'با موفقیت از حساب خارج شدید' });
+      navigate('/');
+    } catch (error) {
+      toast({ title: 'خطا', description: 'خطا در خروج از حساب', variant: 'destructive' });
+    }
   };
 
   const uploadProposal = async (file: File) => {
