@@ -43,7 +43,8 @@ const Profile = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const [nationalIdError, setNationalIdError] = useState<string | null>(null); // اضافه شده
+  const [nationalIdError, setNationalIdError] = useState<string | null>(null);
+  const [phoneError, setPhoneError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
@@ -71,6 +72,13 @@ const Profile = () => {
     const checkDigit = parseInt(trimmed[9]);
 
     return remainder < 2 ? checkDigit === remainder : checkDigit === 11 - remainder;
+  };
+
+  // تابع اعتبارسنجی شماره تماس ایرانی
+  const validatePhone = (phone: string): boolean => {
+    const trimmed = phone.trim();
+    // شماره موبایل ایران باید با 09 شروع شود و 11 رقم باشد
+    return /^09\d{9}$/.test(trimmed);
   };
 
   useEffect(() => {
@@ -161,12 +169,32 @@ const Profile = () => {
         setNationalIdError(null);
       }
     }
+
+    // اعتبارسنجی لحظه‌ای شماره تماس
+    if (field === 'phone') {
+      const trimmed = value.replace(/[^\d]/g, '').slice(0, 11);
+      setProfile(prev => prev ? { ...prev, phone: trimmed } : null);
+
+      if (trimmed.length === 0) {
+        setPhoneError(null);
+      } else if (trimmed.length < 11) {
+        setPhoneError('شماره تماس باید ۱۱ رقم باشد');
+      } else if (!validatePhone(trimmed)) {
+        setPhoneError('شماره تماس باید با ۰۹ شروع شود');
+      } else {
+        setPhoneError(null);
+      }
+    }
   };
 
   const saveProfile = async () => {
     if (!user || !profile) return;
     if (profile.national_id && profile.national_id.length > 0 && nationalIdError) {
       toast({ title: 'خطا', description: 'لطفاً کد ملی معتبر وارد کنید', variant: 'destructive' });
+      return;
+    }
+    if (profile.phone && profile.phone.length > 0 && phoneError) {
+      toast({ title: 'خطا', description: 'لطفاً شماره تماس معتبر وارد کنید', variant: 'destructive' });
       return;
     }
 
@@ -376,9 +404,16 @@ const Profile = () => {
                         type="tel"
                         value={profile?.phone || ''}
                         onChange={(e) => handleProfileChange('phone', e.target.value)}
-                        className="w-full px-4 py-3 rounded-lg bg-secondary border border-border focus:border-primary outline-none"
+                        className={`w-full px-4 py-3 rounded-lg bg-secondary border ${
+                          phoneError ? 'border-destructive focus:border-destructive' : 'border-border focus:border-primary'
+                        } outline-none`}
                         dir="ltr"
+                        placeholder="مثال: 09123456789"
+                        maxLength={11}
                       />
+                      {phoneError && (
+                        <p className="text-sm text-destructive">{phoneError}</p>
+                      )}
                     </div>
 
                     <div className="space-y-2">
@@ -442,7 +477,7 @@ const Profile = () => {
                   <Button
                     variant="gradient"
                     onClick={saveProfile}
-                    disabled={saving || !!nationalIdError}
+                    disabled={saving || !!nationalIdError || !!phoneError}
                     className="mt-6"
                   >
                     {saving ? 'در حال ذخیره...' : 'ذخیره تغییرات'}
