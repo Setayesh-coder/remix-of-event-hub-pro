@@ -16,7 +16,7 @@ const Index = () => {
         <div
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
           style={{
-            backgroundImage: `url('src/assets/hero-bg.jpg')`,
+            backgroundImage: `url('https://wallpaperswide.com/download/breathtaking_nature-wallpaper-1920x1080.jpg')`,
           }}
         >
           <div className="absolute inset-0 bg-black/60" />
