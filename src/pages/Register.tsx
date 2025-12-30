@@ -149,7 +149,7 @@ const Register = () => {
                   </div>
                 </div>
 
-                <label className="flex items-start gap-2 cursor-pointer text-sm">
+                {/* <label className="flex items-start gap-2 cursor-pointer text-sm">
                   <input type="checkbox" className="w-4 h-4 mt-1 rounded border-border bg-secondary" required />
                   <span className="text-muted-foreground">
                     با{' '}
@@ -158,7 +158,7 @@ const Register = () => {
                     </Link>{' '}
                     سایت موافقم
                   </span>
-                </label>
+                </label> */}
 
                 <Button
                   variant="gradient"

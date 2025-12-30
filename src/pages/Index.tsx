@@ -34,11 +34,11 @@ const Index = () => {
                     جوانه<span className="block text-4xl md:text-6xl lg:text-7xl opacity-80">ثریا</span>
                   </h1>
                   <div className="text-4xl md:text-6xl lg:text-7xl font-bold text-white/90 space-y-2 opacity-80 leading-tight">
-                    <p className="text-5xl md:text-7xl lg:text-8xl">JAVANEH</p>
-                    <p className="text-3xl md:text-5xl lg:text-6xl">SORAYA</p>
-                    <p className="text-4xl md:text-6xl lg:text-7xl">PROBLEM</p>
-                    <p className="text-4xl md:text-6xl lg:text-7xl">DRIVEN</p>
-                    <p className="text-4xl md:text-6xl lg:text-7xl">EVENT</p>
+                    <p className="text-5xl md:text-4xl lg:text-4xl">JAVANEH
+                      SORAYA
+                      PROBLEM
+                      DRIVEN
+                      EVENT</p>
                   </div>
                 </div>
                 {/* تایمر  */}
@@ -99,7 +99,7 @@ const Index = () => {
                         className="px-10 py-7 text-lg font-semibold bg-transparent border-0 text-white hover:bg-white/10"
                       >
                         <span className="flex items-center gap-2">
-                          <span className="relative z-10 text-white">ثبت‌نام</span>
+                          <span className="relative z-10 text-white">ثبت‌ نام</span>
                           <ArrowLeft className="h-5 w-5 z-10" />
                         </span>
                       </Button>
@@ -109,7 +109,7 @@ const Index = () => {
                 </div></div>
             </div>
             {/* لوگوهای اسپانسر */}
-            <div className="flex justify-center gap-8 pt-20 pb-10">
+            <div className="flex justify-center gap-8 pt-10 pb-10">
               {[1, 2, 3, 4].map((i) => (
                 <LiquidGlassCard
                   key={i}

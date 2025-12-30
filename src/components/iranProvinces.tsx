@@ -34,7 +34,7 @@ const CitySelect = ({ value, onChange }: CitySelectProps) => {
         className="w-full px-4 py-3 rounded-lg bg-secondary border border-border focus:border-primary outline-none flex items-center justify-between text-right"
       >
         <span className={value ? 'text-foreground' : 'text-muted-foreground'}>
-          {value || 'انتخاب شهر'}
+          {value || 'انتخاب استان'}
         </span>
         <ChevronDown className={`w-4 h-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
       </button>
@@ -73,7 +73,7 @@ const CitySelect = ({ value, onChange }: CitySelectProps) => {
               ))
             ) : (
               <div className="px-4 py-3 text-muted-foreground text-center text-sm">
-                شهری یافت نشد
+                استانی یافت نشد
               </div>
             )}
           </div>
