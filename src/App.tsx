@@ -12,6 +12,8 @@ import Schedule from "./pages/Schedule";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import NotFound from "./pages/NotFound";
+
+// ادمین
 import AdminLogin from './pages/AdminLogin';
 import AdminDashboard from './pages/AdminDashboard';
 import AdminIndex from "./admin/AdminIndex";
@@ -31,6 +33,7 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <Routes>
+            {/* روت‌های عمومی کاربران */}
             <Route path="/" element={<Index />} />
             <Route path="/courses" element={<Courses />} />
             <Route path="/courses/workshop" element={<Courses />} />
@@ -42,19 +45,24 @@ const App = () => (
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="*" element={<NotFound />} />
+
+            {/* صفحه لاگین ادمین - عمومی است */}
             <Route path="/admin/login" element={<AdminLogin />} />
-            <Route path="/admin" element={<AdminDashboard />} />
-            <Route path="/admin/index" element={<AdminIndex />} />
-            <Route path="/admin/gallery" element={<AdminGallery />} />
-            <Route path="/admin/courses" element={<AdminCourses />} />
-            <Route path="/admin/schedule" element={<AdminSchedule />} />
-            <Route path="/admin/profile" element={<AdminProfile />} />
-            <Route path="/admin/*" element={<ProtectedAdminRoute />} />
+
+            {/* همه روت‌های ادمین - محافظت شده */}
+            <Route element={<ProtectedAdminRoute />}>
+              <Route path="/admin" element={<AdminDashboard />} />
+              <Route path="/admin/index" element={<AdminIndex />} />
+              <Route path="/admin/gallery" element={<AdminGallery />} />
+              <Route path="/admin/courses" element={<AdminCourses />} />
+              <Route path="/admin/schedule" element={<AdminSchedule />} />
+              <Route path="/admin/profile" element={<AdminProfile />} />
+            </Route>
           </Routes>
         </BrowserRouter>
       </AuthProvider>
     </TooltipProvider>
-  </QueryClientProvider >
+  </QueryClientProvider>
 );
 
 export default App;
