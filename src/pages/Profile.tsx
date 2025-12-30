@@ -745,7 +745,28 @@ const Profile = () => {
                 <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-accent/5 pointer-events-none" />
                 <div className="relative z-10">
                   <h2 className="text-xl font-semibold">پروپوزال من</h2>
-                  <div className="flex gap-4 flex-wrap mt-4">
+                  <div className="mt-6 p-4 bg-secondary/50 rounded-xl border border-border">
+                    <h3 className="font-medium mb-3 flex items-center gap-2">
+                      <svg className="w-5 h-5 text-primary" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M9.5 16.5L15.5 12L9.5 7.5V16.5Z" fill="currentColor" />
+                        <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="currentColor" strokeWidth="2" />
+                      </svg>
+                      ویدیوی آموزشی نحوه ارسال پروپوزال
+                    </h3>
+                    <div className="aspect-video rounded-lg overflow-hidden bg-black">
+                      <iframe
+                        className="w-full h-full"
+                        src="https://www.aparat.com/video/video/embed/videohash/YOUR_VIDEO_ID/vt/frame"
+                        title="آموزش ارسال پروپوزال"
+                        allowFullScreen
+                      />
+                    </div>
+                    <p className="text-sm text-muted-foreground mt-3">
+                      در این ویدیو نحوه تکمیل و ارسال فرم پروپوزال را مشاهده کنید.
+                    </p>
+                  </div>
+
+                  <div className="flex gap-4 flex-wrap mt-6">
                     <Button variant="outline" asChild className="gap-2">
                       <a href="/proposal-template.pdf" download>
                         <Download className="w-4 h-4" />
