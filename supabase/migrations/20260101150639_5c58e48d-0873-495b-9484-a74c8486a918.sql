@@ -2,10 +2,6 @@
 -- Create enum for app roles
 CREATE TYPE public.app_role AS ENUM ('admin', 'user');
 
-INSERT INTO public.user_roles (user_id, role) 
-VALUES ('60209425-b746-41fb-910f-a276d8cedf74', 'admin');
-
-
 -- Create user_roles table for secure role management
 CREATE TABLE public.user_roles (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
