@@ -110,16 +110,19 @@ const Index = () => {
             </div>
             {/* لوگوهای اسپانسر */}
             <div className="flex justify-center gap-8 pt-10 pb-10">
-              {[1, 2, 3, 4].map((i) => (
+              {["logo1.png", "logo2.png", "logo3.png", "logo4.png"].map((logo, i) => (
                 <LiquidGlassCard
                   key={i}
                   blurIntensity="md"
                   glowIntensity="xs"
                   borderRadius="50%"
-                  className="h-16 w-16"
+                  className="h-20 w-20"
                   draggable={false}
                 >
-                  <div className="h-full w-full rounded-full bg-white/10" />
+                  <div className="h-full w-full rounded-full bg-white/10" >
+                    <img src={`/images/logos/${logo}`} alt={`Logo${i + 1}`} className="h-full w-full object-contain rounded-full p-2 relative "
+                      draggable={false} />
+                  </div>
                 </LiquidGlassCard>
               ))}
             </div>

@@ -25,9 +25,10 @@ const Navbar = () => {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link to="https://microinnovate.ir/" className="flex items-center gap-2">
-            <div className="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center">
-              <span className="text-white font-bold text-lg">ME</span>
-            </div>
+
+            <img className="w-20 h-20 rounded-lg flex items-center justify-center" src="public/images/مرکز رشد میکروالکترونیک.png" alt="ME" />
+
+
             <span className="hidden sm:block text-lg font-bold text-white">میکروالکترونیک</span>
           </Link>
 
