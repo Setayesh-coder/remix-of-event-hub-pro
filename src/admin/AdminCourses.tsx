@@ -4,7 +4,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
     Table,
@@ -17,32 +16,31 @@ import {
 import { Trash2, Edit, Image as ImageIcon, Save, X } from 'lucide-react';
 
 type Course = {
-    id: number;
-    type: 'course' | 'workshop' | 'webinar';
+    id: string;
+    category: string;
     title: string;
     description: string | null;
-    poster_url: string | null;
+    image_url: string | null;
     duration: string | null;
-    instructor: string;
+    instructor: string | null;
     price: number;
-    skyroom_link: string | null;
+    original_price: number | null;
 };
 
 const AdminCourses = () => {
     const [courses, setCourses] = useState<Course[]>([]);
     const [loading, setLoading] = useState(true);
-    const [editingId, setEditingId] = useState<number | null>(null);
+    const [editingId, setEditingId] = useState<string | null>(null);
     const [uploading, setUploading] = useState(false);
 
-    // فرم برای اضافه/ویرایش
     const [form, setForm] = useState<Partial<Course>>({
-        type: 'course',
+        category: '',
         title: '',
         description: '',
         duration: '',
         instructor: '',
         price: 0,
-        skyroom_link: '',
+        original_price: null,
     });
     const [posterFile, setPosterFile] = useState<File | null>(null);
 
@@ -66,14 +64,13 @@ const AdminCourses = () => {
     };
 
     const handleSubmit = async () => {
-        if (!form.title || !form.instructor) {
-            alert('عنوان و نام مدرس الزامی است');
+        if (!form.title || !form.category) {
+            alert('عنوان و دسته‌بندی الزامی است');
             return;
         }
 
-        let posterUrl = form.poster_url;
+        let imageUrl = form.image_url;
 
-        // آپلود پوستر اگر فایل جدید انتخاب شده
         if (posterFile) {
             setUploading(true);
             const fileExt = posterFile.name.split('.').pop();
@@ -81,7 +78,7 @@ const AdminCourses = () => {
             const filePath = `courses/${fileName}`;
 
             const { error: uploadError } = await supabase.storage
-                .from('images')
+                .from('proposals')
                 .upload(filePath, posterFile);
 
             if (uploadError) {
@@ -90,19 +87,22 @@ const AdminCourses = () => {
                 return;
             }
 
-            const { data: urlData } = supabase.storage.from('images').getPublicUrl(filePath);
-            posterUrl = urlData.publicUrl;
+            const { data: urlData } = supabase.storage.from('proposals').getPublicUrl(filePath);
+            imageUrl = urlData.publicUrl;
         }
 
-        // اضافه یا ویرایش
         if (editingId) {
-            // ویرایش
             const { error } = await supabase
                 .from('courses')
                 .update({
-                    ...form,
-                    poster_url: posterUrl,
-                    skyroom_link: form.type === 'webinar' ? form.skyroom_link : null,
+                    category: form.category,
+                    title: form.title,
+                    description: form.description,
+                    image_url: imageUrl,
+                    duration: form.duration,
+                    instructor: form.instructor,
+                    price: form.price || 0,
+                    original_price: form.original_price,
                 })
                 .eq('id', editingId);
 
@@ -114,16 +114,15 @@ const AdminCourses = () => {
                 fetchCourses();
             }
         } else {
-            // اضافه جدید
             const { error } = await supabase.from('courses').insert({
-                type: form.type,
+                category: form.category,
                 title: form.title,
                 description: form.description,
-                poster_url: posterUrl,
+                image_url: imageUrl,
                 duration: form.duration,
                 instructor: form.instructor,
                 price: form.price || 0,
-                skyroom_link: form.type === 'webinar' ? form.skyroom_link : null,
+                original_price: form.original_price,
             });
 
             if (error) {
@@ -147,18 +146,18 @@ const AdminCourses = () => {
     const resetForm = () => {
         setEditingId(null);
         setForm({
-            type: 'course',
+            category: '',
             title: '',
             description: '',
             duration: '',
             instructor: '',
             price: 0,
-            skyroom_link: '',
+            original_price: null,
         });
         setPosterFile(null);
     };
 
-    const handleDelete = async (id: number) => {
+    const handleDelete = async (id: string) => {
         if (!confirm('مطمئنید که می‌خواهید این دوره را حذف کنید؟')) return;
 
         const { error } = await supabase.from('courses').delete().eq('id', id);
@@ -172,7 +171,6 @@ const AdminCourses = () => {
 
     return (
         <div className="p-6 max-w-7xl mx-auto space-y-8">
-            {/* فرم اضافه/ویرایش دوره */}
             <Card>
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2">
@@ -183,20 +181,12 @@ const AdminCourses = () => {
                 <CardContent className="space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                            <Label>نوع دوره</Label>
-                            <Select
-                                value={form.type}
-                                onValueChange={(value: any) => setForm({ ...form, type: value })}
-                            >
-                                <SelectTrigger>
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="course">دوره جامع</SelectItem>
-                                    <SelectItem value="workshop">کارگاه</SelectItem>
-                                    <SelectItem value="webinar">وبینار</SelectItem>
-                                </SelectContent>
-                            </Select>
+                            <Label>دسته‌بندی</Label>
+                            <Input
+                                value={form.category || ''}
+                                onChange={(e) => setForm({ ...form, category: e.target.value })}
+                                placeholder="مثلاً: برنامه‌نویسی"
+                            />
                         </div>
 
                         <div>
@@ -221,7 +211,7 @@ const AdminCourses = () => {
                         />
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                         <div>
                             <Label htmlFor="duration">مدت زمان</Label>
                             <Input
@@ -248,22 +238,19 @@ const AdminCourses = () => {
                                 onChange={(e) => setForm({ ...form, price: Number(e.target.value) })}
                             />
                         </div>
-                    </div>
-
-                    {form.type === 'webinar' && (
                         <div>
-                            <Label htmlFor="skyroom">لینک اسکای‌روم</Label>
+                            <Label htmlFor="original_price">قیمت اصلی (اختیاری)</Label>
                             <Input
-                                id="skyroom"
-                                value={form.skyroom_link || ''}
-                                onChange={(e) => setForm({ ...form, skyroom_link: e.target.value })}
-                                placeholder="https://www.skyroom.online/..."
+                                id="original_price"
+                                type="number"
+                                value={form.original_price || ''}
+                                onChange={(e) => setForm({ ...form, original_price: e.target.value ? Number(e.target.value) : null })}
                             />
                         </div>
-                    )}
+                    </div>
 
                     <div>
-                        <Label>پوستر دوره</Label>
+                        <Label>تصویر دوره</Label>
                         <Input
                             type="file"
                             accept="image/*"
@@ -271,8 +258,8 @@ const AdminCourses = () => {
                             disabled={uploading}
                         />
                         {posterFile && <p className="text-sm text-green-600 mt-1">فایل جدید: {posterFile.name}</p>}
-                        {form.poster_url && !posterFile && (
-                            <img src={form.poster_url} alt="پوستر فعلی" className="mt-4 max-h-64 rounded-lg shadow" />
+                        {form.image_url && !posterFile && (
+                            <img src={form.image_url} alt="پوستر فعلی" className="mt-4 max-h-64 rounded-lg shadow" />
                         )}
                     </div>
 
@@ -291,7 +278,6 @@ const AdminCourses = () => {
                 </CardContent>
             </Card>
 
-            {/* لیست دوره‌ها */}
             <Card>
                 <CardHeader>
                     <CardTitle>لیست دوره‌ها ({courses.length})</CardTitle>
@@ -300,13 +286,13 @@ const AdminCourses = () => {
                     {loading ? (
                         <p className="text-center py-8">در حال بارگذاری...</p>
                     ) : courses.length === 0 ? (
-                        <p className="text-center py-8 text-gray-500">هنوز دوره‌ای اضافه نشده است.</p>
+                        <p className="text-center py-8 text-muted-foreground">هنوز دوره‌ای اضافه نشده است.</p>
                     ) : (
                         <Table>
                             <TableHeader>
                                 <TableRow>
-                                    <TableHead>پوستر</TableHead>
-                                    <TableHead>نوع</TableHead>
+                                    <TableHead>تصویر</TableHead>
+                                    <TableHead>دسته‌بندی</TableHead>
                                     <TableHead>عنوان</TableHead>
                                     <TableHead>مدرس</TableHead>
                                     <TableHead>قیمت</TableHead>
@@ -317,19 +303,19 @@ const AdminCourses = () => {
                                 {courses.map((course) => (
                                     <TableRow key={course.id}>
                                         <TableCell>
-                                            {course.poster_url ? (
-                                                <img src={course.poster_url} alt={course.title} className="h-20 w-32 object-cover rounded" />
+                                            {course.image_url ? (
+                                                <img src={course.image_url} alt={course.title} className="h-20 w-32 object-cover rounded" />
                                             ) : (
-                                                <div className="bg-gray-200 border-2 border-dashed rounded-xl w-32 h-20" />
+                                                <div className="bg-muted border-2 border-dashed rounded-xl w-32 h-20" />
                                             )}
                                         </TableCell>
                                         <TableCell>
-                                            <span className="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800">
-                                                {course.type === 'course' ? 'دوره' : course.type === 'workshop' ? 'کارگاه' : 'وبینار'}
+                                            <span className="px-2 py-1 text-xs rounded-full bg-primary/10 text-primary">
+                                                {course.category}
                                             </span>
                                         </TableCell>
                                         <TableCell className="font-medium">{course.title}</TableCell>
-                                        <TableCell>{course.instructor}</TableCell>
+                                        <TableCell>{course.instructor || '-'}</TableCell>
                                         <TableCell>{course.price === 0 ? 'رایگان' : `${course.price.toLocaleString()} تومان`}</TableCell>
                                         <TableCell className="text-center space-x-2">
                                             <Button size="sm" onClick={() => startEdit(course)}>
