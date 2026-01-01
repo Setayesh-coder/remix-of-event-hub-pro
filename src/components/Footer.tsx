@@ -9,9 +9,9 @@ const Footer = () => {
           {/* Brand */}
           <div className="space-y-4">
             <div className="flex items-center gap-2">
-              {/* <div className="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center"> */}
-              <img className="w-20 h-20 rounded-lg flex items-center justify-center" src="public/images/مرکز تحقیقات اپتوالکترونیک.png" alt="ME" />
-              {/* </div> */}
+
+              <img className="w-40 h-40 rounded-lg flex items-center justify-center" src="public/images/logos/logo4.png" alt="ME" />
+
               <span className="text-lg font-bold text-white">میکروالکترونیک</span>
             </div>
             <p className="text-white/70 text-sm leading-relaxed">

@@ -116,11 +116,11 @@ const Index = () => {
                   blurIntensity="md"
                   glowIntensity="xs"
                   borderRadius="50%"
-                  className="h-20 w-20"
+                  className="h-16 w-16"
                   draggable={false}
                 >
                   <div className="h-full w-full rounded-full bg-white/10" >
-                    <img src={`/images/logos/${logo}`} alt={`Logo${i + 1}`} className="h-full w-full object-contain rounded-full p-2 relative "
+                    <img src={`/images/logos/${logo}`} alt={`Logo${i + 1}`} className="h-full w-full object-contain rounded-full p-2 relative z-10"
                       draggable={false} />
                   </div>
                 </LiquidGlassCard>
