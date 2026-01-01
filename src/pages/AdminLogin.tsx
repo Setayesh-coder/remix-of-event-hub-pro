@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 const AdminLogin = () => {
-    const [username, setUsername] = useState('');
+    const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
@@ -15,23 +15,17 @@ const AdminLogin = () => {
     const { login } = useAdminAuth();
     const navigate = useNavigate();
 
-    const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-
-
         setError('');
         setLoading(true);
 
-        const success = login(username.trim(), password);
+        const result = await login(email.trim(), password);
 
-        if (success) {
-
-            // اول با navigate امتحان کن
+        if (result.success) {
             navigate('/admin', { replace: true });
-            // اگر کار نکرد، این خط رو آنکامنت کن:
-            // window.location.href = '/admin';
         } else {
-            setError('نام کاربری یا رمز عبور اشتباه است');
+            setError(result.error || 'خطا در ورود');
             setLoading(false);
         }
     };
@@ -45,15 +39,15 @@ const AdminLogin = () => {
                 <CardContent>
                     <form onSubmit={handleSubmit} className="space-y-4">
                         <div className="space-y-2">
-                            <Label htmlFor="username">نام کاربری</Label>
+                            <Label htmlFor="email">ایمیل</Label>
                             <Input
-                                id="username"
-                                type="text"
-                                value={username}
-                                onChange={(e) => setUsername(e.target.value)}
+                                id="email"
+                                type="email"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
                                 required
                                 disabled={loading}
-                                placeholder="admin"
+                                placeholder="admin@example.com"
                             />
                         </div>
 
@@ -69,7 +63,7 @@ const AdminLogin = () => {
                             />
                         </div>
 
-                        {error && <p className="text-sm text-red-600 text-center">{error}</p>}
+                        {error && <p className="text-sm text-destructive text-center">{error}</p>}
 
                         <Button type="submit" className="w-full" disabled={loading}>
                             {loading ? 'در حال ورود...' : 'ورود به پنل'}

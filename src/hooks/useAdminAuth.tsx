@@ -1,39 +1,87 @@
 import { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { User } from '@supabase/supabase-js';
 
 export const useAdminAuth = () => {
     const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
+    const [loading, setLoading] = useState(true);
+    const [user, setUser] = useState<User | null>(null);
 
     useEffect(() => {
-        // هر بار که هوک لود می‌شه (مثل رفرش صفحه)، وضعیت رو از localStorage بخون
-        const checkLoginStatus = () => {
-            const loggedIn = localStorage.getItem('adminLoggedIn') === 'true';
-            setIsAdminLoggedIn(loggedIn);
+        const checkAdminStatus = async (currentUser: User | null) => {
+            if (!currentUser) {
+                setIsAdminLoggedIn(false);
+                setUser(null);
+                setLoading(false);
+                return;
+            }
+
+            // Check if user has admin role using the has_role function
+            const { data, error } = await supabase.rpc('has_role', {
+                _user_id: currentUser.id,
+                _role: 'admin'
+            });
+
+            if (error) {
+                console.error('Error checking admin role:', error);
+                setIsAdminLoggedIn(false);
+            } else {
+                setIsAdminLoggedIn(data === true);
+            }
+            setUser(currentUser);
+            setLoading(false);
         };
 
-        checkLoginStatus();
+        // Set up auth state listener
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(
+            (event, session) => {
+                checkAdminStatus(session?.user ?? null);
+            }
+        );
 
-        // اگر localStorage تغییر کرد (مثل تب دیگه)، آپدیت کن
-        window.addEventListener('storage', checkLoginStatus);
+        // Check initial session
+        supabase.auth.getSession().then(({ data: { session } }) => {
+            checkAdminStatus(session?.user ?? null);
+        });
 
-        return () => window.removeEventListener('storage', checkLoginStatus);
+        return () => subscription.unsubscribe();
     }, []);
 
-    const login = (username: string, password: string) => {
-        if (
-            username.trim() === import.meta.env.VITE_ADMIN_USERNAME &&
-            password === import.meta.env.VITE_ADMIN_PASSWORD
-        ) {
-            localStorage.setItem('adminLoggedIn', 'true');
-            setIsAdminLoggedIn(true);
-            return true;
+    const login = async (email: string, password: string) => {
+        setLoading(true);
+        const { data, error } = await supabase.auth.signInWithPassword({
+            email,
+            password,
+        });
+
+        if (error) {
+            setLoading(false);
+            return { success: false, error: error.message };
         }
-        return false;
+
+        // Check if the user has admin role
+        const { data: isAdmin, error: roleError } = await supabase.rpc('has_role', {
+            _user_id: data.user.id,
+            _role: 'admin'
+        });
+
+        if (roleError || !isAdmin) {
+            await supabase.auth.signOut();
+            setLoading(false);
+            return { success: false, error: 'شما دسترسی ادمین ندارید' };
+        }
+
+        setIsAdminLoggedIn(true);
+        setUser(data.user);
+        setLoading(false);
+        return { success: true, error: null };
     };
 
-    const logout = () => {
-        localStorage.removeItem('adminLoggedIn');
+    const logout = async () => {
+        await supabase.auth.signOut();
         setIsAdminLoggedIn(false);
+        setUser(null);
     };
 
-    return { isAdminLoggedIn, login, logout };
+    return { isAdminLoggedIn, loading, user, login, logout };
 };
