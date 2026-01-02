@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from '@/hooks/use-toast';
-import { Home, Save, Upload, ArrowRight } from 'lucide-react';
+import { Home, Save, Upload, ArrowRight, Plus, Trash2, Image } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const AdminIndex = () => {
@@ -18,8 +18,10 @@ const AdminIndex = () => {
         hero_description: '',
         hero_background: '',
         countdown_target: '',
+        logos: [] as string[],
     });
     const [backgroundFile, setBackgroundFile] = useState<File | null>(null);
+    const [logoFile, setLogoFile] = useState<File | null>(null);
 
     useEffect(() => {
         fetchSettings();
@@ -46,6 +48,7 @@ const AdminIndex = () => {
             hero_description: settingsMap.hero_description || '',
             hero_background: settingsMap.hero_background || '',
             countdown_target: settingsMap.countdown_target || '',
+            logos: settingsMap.logos ? JSON.parse(settingsMap.logos) : [],
         });
         setLoading(false);
     };
@@ -71,6 +74,73 @@ const AdminIndex = () => {
         return publicUrl;
     };
 
+    const handleLogoUpload = async () => {
+        if (!logoFile) return null;
+
+        const fileExt = logoFile.name.split('.').pop();
+        const fileName = `logo-${Date.now()}.${fileExt}`;
+
+        const { error } = await supabase.storage
+            .from('admin-uploads')
+            .upload(fileName, logoFile);
+
+        if (error) {
+            throw new Error('خطا در آپلود لوگو');
+        }
+
+        const { data: { publicUrl } } = supabase.storage
+            .from('admin-uploads')
+            .getPublicUrl(fileName);
+
+        return publicUrl;
+    };
+
+    const addLogo = async () => {
+        if (!logoFile) {
+            toast({ title: 'خطا', description: 'لطفاً یک لوگو انتخاب کنید', variant: 'destructive' });
+            return;
+        }
+
+        try {
+            const logoUrl = await handleLogoUpload();
+            if (logoUrl) {
+                const newLogos = [...settings.logos, logoUrl];
+                setSettings(prev => ({ ...prev, logos: newLogos }));
+                setLogoFile(null);
+                toast({ title: 'موفق', description: 'لوگو اضافه شد - برای ذخیره دکمه ذخیره را بزنید' });
+            }
+        } catch (error) {
+            toast({ title: 'خطا', description: 'خطا در آپلود لوگو', variant: 'destructive' });
+        }
+    };
+
+    const removeLogo = (index: number) => {
+        const newLogos = settings.logos.filter((_, i) => i !== index);
+        setSettings(prev => ({ ...prev, logos: newLogos }));
+    };
+
+    const upsertSetting = async (key: string, value: string) => {
+        // First try to update
+        const { data: existing } = await supabase
+            .from('site_settings')
+            .select('id')
+            .eq('key', key)
+            .maybeSingle();
+
+        if (existing) {
+            const { error } = await supabase
+                .from('site_settings')
+                .update({ value, updated_at: new Date().toISOString() })
+                .eq('key', key);
+            if (error) throw error;
+        } else {
+            const { error } = await supabase
+                .from('site_settings')
+                .insert({ key, value });
+            if (error) throw error;
+        }
+    };
+
     const handleSave = async () => {
         setSaving(true);
         try {
@@ -80,21 +150,11 @@ const AdminIndex = () => {
                 backgroundUrl = await handleBackgroundUpload() || backgroundUrl;
             }
 
-            const updates = [
-                { key: 'hero_title', value: settings.hero_title },
-                { key: 'hero_description', value: settings.hero_description },
-                { key: 'hero_background', value: backgroundUrl },
-                { key: 'countdown_target', value: settings.countdown_target },
-            ];
-
-            for (const update of updates) {
-                const { error } = await supabase
-                    .from('site_settings')
-                    .update({ value: update.value, updated_at: new Date().toISOString() })
-                    .eq('key', update.key);
-
-                if (error) throw error;
-            }
+            await upsertSetting('hero_title', settings.hero_title);
+            await upsertSetting('hero_description', settings.hero_description);
+            await upsertSetting('hero_background', backgroundUrl);
+            await upsertSetting('countdown_target', settings.countdown_target);
+            await upsertSetting('logos', JSON.stringify(settings.logos));
 
             toast({ title: 'موفق', description: 'تنظیمات ذخیره شد' });
             setBackgroundFile(null);
@@ -178,12 +238,52 @@ const AdminIndex = () => {
                         <Input
                             id="countdown_target"
                             type="datetime-local"
-                            value={settings.countdown_target.slice(0, 16)}
+                            value={settings.countdown_target ? settings.countdown_target.slice(0, 16) : ''}
                             onChange={(e) => setSettings(prev => ({ 
                                 ...prev, 
                                 countdown_target: new Date(e.target.value).toISOString() 
                             }))}
                         />
+                    </div>
+
+                    {/* لوگوها */}
+                    <div className="space-y-4">
+                        <Label className="flex items-center gap-2">
+                            <Image className="h-4 w-4" />
+                            لوگوهای اسپانسر
+                        </Label>
+                        
+                        <div className="grid grid-cols-4 gap-4">
+                            {settings.logos.map((logo, index) => (
+                                <div key={index} className="relative group">
+                                    <img
+                                        src={logo}
+                                        alt={`لوگو ${index + 1}`}
+                                        className="w-full aspect-square object-contain border rounded-lg p-2"
+                                    />
+                                    <Button
+                                        variant="destructive"
+                                        size="icon"
+                                        className="absolute -top-2 -right-2 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                                        onClick={() => removeLogo(index)}
+                                    >
+                                        <Trash2 className="h-3 w-3" />
+                                    </Button>
+                                </div>
+                            ))}
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                            <Input
+                                type="file"
+                                accept="image/*"
+                                onChange={(e) => setLogoFile(e.target.files?.[0] || null)}
+                            />
+                            <Button onClick={addLogo} disabled={!logoFile} variant="outline" className="gap-2">
+                                <Plus className="h-4 w-4" />
+                                افزودن لوگو
+                            </Button>
+                        </div>
                     </div>
 
                     <Button onClick={handleSave} disabled={saving} className="gap-2">
