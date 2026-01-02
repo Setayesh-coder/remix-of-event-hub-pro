@@ -1,22 +1,37 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { X, ChevronRight, ChevronLeft } from 'lucide-react';
 import Layout from '@/components/Layout';
-import { Button } from '@/components/ui/button';
+import { supabase } from '@/integrations/supabase/client';
+
+interface GalleryItem {
+  id: string;
+  image_url: string;
+  title: string | null;
+  category: string | null;
+  event_date: string | null;
+  event_time: string | null;
+}
 
 const Gallery = () => {
   const [selectedImage, setSelectedImage] = useState<number | null>(null);
+  const [galleryItems, setGalleryItems] = useState<GalleryItem[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // Sample gallery items
-  const galleryItems = [
-    { id: 1, title: 'کارگاه PCB', category: 'کارگاه' },
-    { id: 2, title: 'وبینار IoT', category: 'وبینار' },
-    { id: 3, title: 'آزمایشگاه', category: 'تجهیزات' },
-    { id: 4, title: 'تیم برگزارکنندگان', category: 'تیم' },
-    { id: 5, title: 'مسابقات', category: 'رویداد' },
-    { id: 6, title: 'نمایشگاه', category: 'رویداد' },
-    { id: 7, title: 'کارگاه ARM', category: 'کارگاه' },
-    { id: 8, title: 'جوایز', category: 'رویداد' },
-  ];
+  useEffect(() => {
+    fetchImages();
+  }, []);
+
+  const fetchImages = async () => {
+    const { data, error } = await supabase
+      .from('gallery_images')
+      .select('*')
+      .order('event_date', { ascending: false });
+
+    if (!error && data) {
+      setGalleryItems(data);
+    }
+    setLoading(false);
+  };
 
   const handlePrev = () => {
     if (selectedImage !== null) {
@@ -29,6 +44,24 @@ const Gallery = () => {
       setSelectedImage(selectedImage === galleryItems.length - 1 ? 0 : selectedImage + 1);
     }
   };
+
+  // Group images by date
+  const groupedByDate = galleryItems.reduce((acc, item) => {
+    const date = item.event_date || 'بدون تاریخ';
+    if (!acc[date]) acc[date] = [];
+    acc[date].push(item);
+    return acc;
+  }, {} as Record<string, GalleryItem[]>);
+
+  if (loading) {
+    return (
+      <Layout>
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-lg">در حال بارگذاری...</div>
+        </div>
+      </Layout>
+    );
+  }
 
   return (
     <Layout>
@@ -44,30 +77,46 @@ const Gallery = () => {
             </p>
           </div>
 
-          {/* Gallery Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {galleryItems.map((item, index) => (
-              <div
-                key={item.id}
-                className="relative aspect-square rounded-xl overflow-hidden cursor-pointer group animate-fade-in"
-                style={{ animationDelay: `${index * 50}ms` }}
-                onClick={() => setSelectedImage(index)}
-              >
-                <div className="absolute inset-0 bg-gradient-to-br from-primary/30 to-accent/30 group-hover:opacity-0 transition-opacity duration-300" />
-                <div className="w-full h-full bg-gradient-to-br from-secondary to-muted flex items-center justify-center">
-                  <span className="text-4xl text-primary/50">{item.id}</span>
-                </div>
-                <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                <div className="absolute bottom-0 right-0 left-0 p-4 translate-y-full group-hover:translate-y-0 transition-transform duration-300">
-                  <h3 className="font-semibold">{item.title}</h3>
-                  <p className="text-sm text-muted-foreground">{item.category}</p>
+          {galleryItems.length === 0 ? (
+            <p className="text-center text-muted-foreground py-12">هنوز تصویری اضافه نشده است</p>
+          ) : (
+            Object.entries(groupedByDate).map(([date, images]) => (
+              <div key={date} className="mb-12">
+                <h2 className="text-xl font-semibold mb-6 border-b border-border pb-2">
+                  {date === 'بدون تاریخ' ? date : new Date(date).toLocaleDateString('fa-IR')}
+                </h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                  {images.map((item) => {
+                    const globalIndex = galleryItems.findIndex(g => g.id === item.id);
+                    return (
+                      <div
+                        key={item.id}
+                        className="relative aspect-square rounded-xl overflow-hidden cursor-pointer group animate-fade-in"
+                        onClick={() => setSelectedImage(globalIndex)}
+                      >
+                        <img
+                          src={item.image_url}
+                          alt={item.title || 'تصویر گالری'}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                        <div className="absolute bottom-0 right-0 left-0 p-4 translate-y-full group-hover:translate-y-0 transition-transform duration-300">
+                          <h3 className="font-semibold text-white">{item.title || 'بدون عنوان'}</h3>
+                          <p className="text-sm text-white/70">{item.category || ''}</p>
+                          {item.event_time && (
+                            <p className="text-xs text-white/60 mt-1">ساعت: {item.event_time}</p>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
-            ))}
-          </div>
+            ))
+          )}
 
           {/* Lightbox */}
-          {selectedImage !== null && (
+          {selectedImage !== null && galleryItems[selectedImage] && (
             <div className="fixed inset-0 z-50 bg-background/95 backdrop-blur-xl flex items-center justify-center animate-fade-in">
               <button
                 className="absolute top-4 left-4 p-2 rounded-full bg-secondary hover:bg-primary hover:text-primary-foreground transition-colors"
@@ -92,12 +141,14 @@ const Gallery = () => {
 
               <div className="max-w-4xl w-full mx-4">
                 <div className="aspect-video rounded-2xl overflow-hidden glow">
-                  <div className="w-full h-full bg-gradient-to-br from-secondary to-muted flex items-center justify-center">
-                    <span className="text-6xl text-primary/50">{galleryItems[selectedImage].id}</span>
-                  </div>
+                  <img
+                    src={galleryItems[selectedImage].image_url}
+                    alt={galleryItems[selectedImage].title || 'تصویر'}
+                    className="w-full h-full object-contain bg-black"
+                  />
                 </div>
                 <div className="text-center mt-4">
-                  <h3 className="text-xl font-semibold">{galleryItems[selectedImage].title}</h3>
+                  <h3 className="text-xl font-semibold">{galleryItems[selectedImage].title || 'بدون عنوان'}</h3>
                   <p className="text-muted-foreground">{galleryItems[selectedImage].category}</p>
                 </div>
               </div>

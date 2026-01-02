@@ -1,12 +1,67 @@
 import { Link } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
+import { useState, useEffect } from 'react';
 import Layout from '@/components/Layout';
 import CountdownTimer from '@/components/CountdownTimer';
 import { Button } from '@/components/ui/button';
 import { LiquidGlassCard } from '@/components/ui/liquidglass';
+import { supabase } from '@/integrations/supabase/client';
+
+interface SiteSettings {
+  hero_title: string;
+  hero_description: string;
+  hero_background: string;
+  countdown_target: string;
+  logos: string[];
+}
 
 const Index = () => {
-  const registrationDeadline = new Date('2026-01-15T23:59:59');
+  const [settings, setSettings] = useState<SiteSettings>({
+    hero_title: 'جوانه ثریا',
+    hero_description: 'جهت ثبت‌نام در رویداد لطفا کلیک کنید.',
+    hero_background: 'https://wallpaperswide.com/download/breathtaking_nature-wallpaper-1920x1080.jpg',
+    countdown_target: '2026-01-15T23:59:59',
+    logos: ['/images/logos/logo1.png', '/images/logos/logo2.png', '/images/logos/logo3.png', '/images/logos/logo4.png'],
+  });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchSettings();
+  }, []);
+
+  const fetchSettings = async () => {
+    const { data } = await supabase
+      .from('site_settings')
+      .select('key, value');
+
+    if (data) {
+      const settingsMap: Record<string, string> = {};
+      data.forEach(item => {
+        settingsMap[item.key] = item.value || '';
+      });
+
+      setSettings(prev => ({
+        hero_title: settingsMap.hero_title || prev.hero_title,
+        hero_description: settingsMap.hero_description || prev.hero_description,
+        hero_background: settingsMap.hero_background || prev.hero_background,
+        countdown_target: settingsMap.countdown_target || prev.countdown_target,
+        logos: settingsMap.logos ? JSON.parse(settingsMap.logos) : prev.logos,
+      }));
+    }
+    setLoading(false);
+  };
+
+  const registrationDeadline = new Date(settings.countdown_target);
+
+  if (loading) {
+    return (
+      <Layout>
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-white text-xl">در حال بارگذاری...</div>
+        </div>
+      </Layout>
+    );
+  }
 
   return (
     <Layout>
@@ -16,7 +71,7 @@ const Index = () => {
         <div
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
           style={{
-            backgroundImage: `url('https://wallpaperswide.com/download/breathtaking_nature-wallpaper-1920x1080.jpg')`,
+            backgroundImage: `url('${settings.hero_background}')`,
           }}
         >
           <div className="absolute inset-0 bg-black/60" />
@@ -31,7 +86,7 @@ const Index = () => {
                 {/* عنوان اصلی */}
                 <div className="space-y-6">
                   <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold text-white tracking-wider opacity-90 leading-tight">
-                    جوانه<span className="block text-4xl md:text-6xl lg:text-7xl opacity-80">ثریا</span>
+                    {settings.hero_title.split(' ')[0]}<span className="block text-4xl md:text-6xl lg:text-7xl opacity-80">{settings.hero_title.split(' ').slice(1).join(' ')}</span>
                   </h1>
                   <div className="text-4xl md:text-6xl lg:text-7xl font-bold text-white/90 space-y-2 opacity-80 leading-tight">
                     <p className="text-5xl md:text-4xl lg:text-4xl">JAVANEH
@@ -61,7 +116,7 @@ const Index = () => {
                   </LiquidGlassCard>
                 </div>
                 <p className="text-lg md:text-xl lg:text-2xl text-white/80 leading-relaxed px-4">
-                  جهت ثبت‌نام در رویداد لطفا کلیک کنید.
+                  {settings.hero_description}
                 </p>
 
                 {/* دکمه‌ها*/}
@@ -110,7 +165,7 @@ const Index = () => {
             </div>
             {/* لوگوهای اسپانسر */}
             <div className="flex justify-center gap-8 pt-10 pb-10">
-              {["logo1.png", "logo2.png", "logo3.png", "logo4.png"].map((logo, i) => (
+              {settings.logos.map((logo, i) => (
                 <LiquidGlassCard
                   key={i}
                   blurIntensity="md"
@@ -120,7 +175,7 @@ const Index = () => {
                   draggable={false}
                 >
                   <div className="h-full w-full rounded-full bg-white/10" >
-                    <img src={`/images/logos/${logo}`} alt={`Logo${i + 1}`} className="h-full w-full object-contain rounded-full p-2 relative z-10"
+                    <img src={logo} alt={`Logo${i + 1}`} className="h-full w-full object-contain rounded-full p-2 relative z-10"
                       draggable={false} />
                   </div>
                 </LiquidGlassCard>

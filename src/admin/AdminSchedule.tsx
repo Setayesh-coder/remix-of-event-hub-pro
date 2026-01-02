@@ -38,14 +38,10 @@ interface Course {
     title: string;
 }
 
-const emptySchedule = {
-    day_number: 1,
-    day_title: 'روز اول',
-    time_slot: '',
-    course_id: null as string | null,
-    title: '',
-    description: '',
-};
+interface DayConfig {
+    day_number: number;
+    day_title: string;
+}
 
 const AdminSchedule = () => {
     const navigate = useNavigate();
@@ -55,8 +51,25 @@ const AdminSchedule = () => {
     const [dialogOpen, setDialogOpen] = useState(false);
     const [saving, setSaving] = useState(false);
     const [editingSchedule, setEditingSchedule] = useState<Schedule | null>(null);
-    const [formData, setFormData] = useState(emptySchedule);
     const [activeDay, setActiveDay] = useState('1');
+    
+    // Days management
+    const [days, setDays] = useState<DayConfig[]>([
+        { day_number: 1, day_title: 'روز اول' },
+        { day_number: 2, day_title: 'روز دوم' },
+        { day_number: 3, day_title: 'روز سوم' },
+    ]);
+    const [newDayTitle, setNewDayTitle] = useState('');
+    const [dayDialogOpen, setDayDialogOpen] = useState(false);
+    
+    const [formData, setFormData] = useState({
+        day_number: 1,
+        day_title: 'روز اول',
+        time_slot: '',
+        course_id: null as string | null,
+        title: '',
+        description: '',
+    });
 
     useEffect(() => {
         fetchData();
@@ -72,6 +85,15 @@ const AdminSchedule = () => {
             toast({ title: 'خطا', description: 'خطا در دریافت برنامه‌ها', variant: 'destructive' });
         } else {
             setSchedules(schedulesRes.data || []);
+            
+            // Extract unique days from schedules
+            const uniqueDays = [...new Map(
+                (schedulesRes.data || []).map(s => [s.day_number, { day_number: s.day_number, day_title: s.day_title }])
+            ).values()].sort((a, b) => a.day_number - b.day_number);
+            
+            if (uniqueDays.length > 0) {
+                setDays(uniqueDays);
+            }
         }
 
         if (coursesRes.data) {
@@ -81,12 +103,48 @@ const AdminSchedule = () => {
         setLoading(false);
     };
 
+    const addNewDay = () => {
+        if (!newDayTitle.trim()) {
+            toast({ title: 'خطا', description: 'عنوان روز الزامی است', variant: 'destructive' });
+            return;
+        }
+        
+        const newDayNumber = Math.max(...days.map(d => d.day_number), 0) + 1;
+        setDays([...days, { day_number: newDayNumber, day_title: newDayTitle }]);
+        setNewDayTitle('');
+        setDayDialogOpen(false);
+        toast({ title: 'موفق', description: 'روز جدید اضافه شد' });
+    };
+
+    const deleteDay = (dayNumber: number) => {
+        const daySchedules = schedules.filter(s => s.day_number === dayNumber);
+        if (daySchedules.length > 0) {
+            if (!confirm('این روز دارای برنامه است. آیا از حذف مطمئنید؟')) return;
+            
+            // Delete all schedules for this day
+            daySchedules.forEach(async (s) => {
+                await supabase.from('schedules').delete().eq('id', s.id);
+            });
+        }
+        
+        setDays(days.filter(d => d.day_number !== dayNumber));
+        if (activeDay === String(dayNumber)) {
+            setActiveDay('1');
+        }
+        toast({ title: 'موفق', description: 'روز حذف شد' });
+        fetchData();
+    };
+
     const openAddDialog = (dayNumber: number) => {
+        const day = days.find(d => d.day_number === dayNumber);
         setEditingSchedule(null);
         setFormData({
-            ...emptySchedule,
             day_number: dayNumber,
-            day_title: getDayTitle(dayNumber),
+            day_title: day?.day_title || '',
+            time_slot: '',
+            course_id: null,
+            title: '',
+            description: '',
         });
         setDialogOpen(true);
     };
@@ -102,15 +160,6 @@ const AdminSchedule = () => {
             description: schedule.description || '',
         });
         setDialogOpen(true);
-    };
-
-    const getDayTitle = (dayNumber: number) => {
-        switch (dayNumber) {
-            case 1: return 'روز اول';
-            case 2: return 'روز دوم';
-            case 3: return 'روز سوم';
-            default: return '';
-        }
     };
 
     const handleSave = async () => {
@@ -178,6 +227,11 @@ const AdminSchedule = () => {
                     <ArrowRight className="h-4 w-4" />
                     بازگشت
                 </Button>
+                
+                <Button onClick={() => setDayDialogOpen(true)} variant="outline" className="gap-2">
+                    <Plus className="h-4 w-4" />
+                    افزودن روز جدید
+                </Button>
             </div>
 
             <Card>
@@ -188,72 +242,115 @@ const AdminSchedule = () => {
                     </CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <Tabs value={activeDay} onValueChange={setActiveDay}>
-                        <TabsList className="grid w-full grid-cols-3">
-                            <TabsTrigger value="1">روز اول</TabsTrigger>
-                            <TabsTrigger value="2">روز دوم</TabsTrigger>
-                            <TabsTrigger value="3">روز سوم</TabsTrigger>
-                        </TabsList>
+                    {days.length === 0 ? (
+                        <p className="text-center text-muted-foreground py-8">هنوز روزی اضافه نشده است</p>
+                    ) : (
+                        <Tabs value={activeDay} onValueChange={setActiveDay}>
+                            <div className="flex items-center gap-2 mb-4 flex-wrap">
+                                <TabsList className="flex-wrap h-auto">
+                                    {days.map((day) => (
+                                        <TabsTrigger key={day.day_number} value={String(day.day_number)}>
+                                            {day.day_title}
+                                        </TabsTrigger>
+                                    ))}
+                                </TabsList>
+                            </div>
 
-                        {[1, 2, 3].map((dayNumber) => (
-                            <TabsContent key={dayNumber} value={String(dayNumber)} className="space-y-4">
-                                <div className="flex justify-end">
-                                    <Button onClick={() => openAddDialog(dayNumber)} className="gap-2">
-                                        <Plus className="h-4 w-4" />
-                                        افزودن برنامه
-                                    </Button>
-                                </div>
+                            {days.map((day) => (
+                                <TabsContent key={day.day_number} value={String(day.day_number)} className="space-y-4">
+                                    <div className="flex justify-between items-center">
+                                        <h3 className="text-lg font-semibold">{day.day_title}</h3>
+                                        <div className="flex gap-2">
+                                            <Button onClick={() => openAddDialog(day.day_number)} className="gap-2">
+                                                <Plus className="h-4 w-4" />
+                                                افزودن برنامه
+                                            </Button>
+                                            {days.length > 1 && (
+                                                <Button 
+                                                    variant="destructive" 
+                                                    size="sm"
+                                                    onClick={() => deleteDay(day.day_number)}
+                                                >
+                                                    <Trash2 className="h-4 w-4" />
+                                                </Button>
+                                            )}
+                                        </div>
+                                    </div>
 
-                                {getSchedulesByDay(dayNumber).length === 0 ? (
-                                    <p className="text-center text-muted-foreground py-8">
-                                        هنوز برنامه‌ای برای این روز اضافه نشده است
-                                    </p>
-                                ) : (
-                                    <div className="space-y-3">
-                                        {getSchedulesByDay(dayNumber).map((schedule) => (
-                                            <div
-                                                key={schedule.id}
-                                                className="flex items-center justify-between p-4 border rounded-lg"
-                                            >
-                                                <div className="flex items-center gap-4">
-                                                    <span className="text-lg font-bold text-primary min-w-[60px]">
-                                                        {schedule.time_slot}
-                                                    </span>
-                                                    <div>
-                                                        <h4 className="font-medium">{schedule.title}</h4>
-                                                        {schedule.description && (
-                                                            <p className="text-sm text-muted-foreground">
-                                                                {schedule.description}
-                                                            </p>
-                                                        )}
+                                    {getSchedulesByDay(day.day_number).length === 0 ? (
+                                        <p className="text-center text-muted-foreground py-8">
+                                            هنوز برنامه‌ای برای این روز اضافه نشده است
+                                        </p>
+                                    ) : (
+                                        <div className="space-y-3">
+                                            {getSchedulesByDay(day.day_number).map((schedule) => (
+                                                <div
+                                                    key={schedule.id}
+                                                    className="flex items-center justify-between p-4 border rounded-lg"
+                                                >
+                                                    <div className="flex items-center gap-4">
+                                                        <span className="text-lg font-bold text-primary min-w-[60px]">
+                                                            {schedule.time_slot}
+                                                        </span>
+                                                        <div>
+                                                            <h4 className="font-medium">{schedule.title}</h4>
+                                                            {schedule.description && (
+                                                                <p className="text-sm text-muted-foreground">
+                                                                    {schedule.description}
+                                                                </p>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                    <div className="flex gap-2">
+                                                        <Button
+                                                            variant="outline"
+                                                            size="sm"
+                                                            onClick={() => openEditDialog(schedule)}
+                                                        >
+                                                            <Edit className="h-4 w-4" />
+                                                        </Button>
+                                                        <Button
+                                                            variant="destructive"
+                                                            size="sm"
+                                                            onClick={() => handleDelete(schedule.id)}
+                                                        >
+                                                            <Trash2 className="h-4 w-4" />
+                                                        </Button>
                                                     </div>
                                                 </div>
-                                                <div className="flex gap-2">
-                                                    <Button
-                                                        variant="outline"
-                                                        size="sm"
-                                                        onClick={() => openEditDialog(schedule)}
-                                                    >
-                                                        <Edit className="h-4 w-4" />
-                                                    </Button>
-                                                    <Button
-                                                        variant="destructive"
-                                                        size="sm"
-                                                        onClick={() => handleDelete(schedule.id)}
-                                                    >
-                                                        <Trash2 className="h-4 w-4" />
-                                                    </Button>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
-                            </TabsContent>
-                        ))}
-                    </Tabs>
+                                            ))}
+                                        </div>
+                                    )}
+                                </TabsContent>
+                            ))}
+                        </Tabs>
+                    )}
                 </CardContent>
             </Card>
 
+            {/* Add Day Dialog */}
+            <Dialog open={dayDialogOpen} onOpenChange={setDayDialogOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>افزودن روز جدید</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                        <div className="space-y-2">
+                            <Label>عنوان روز *</Label>
+                            <Input
+                                value={newDayTitle}
+                                onChange={(e) => setNewDayTitle(e.target.value)}
+                                placeholder="مثلاً: روز چهارم"
+                            />
+                        </div>
+                        <Button onClick={addNewDay} className="w-full">
+                            افزودن روز
+                        </Button>
+                    </div>
+                </DialogContent>
+            </Dialog>
+
+            {/* Add/Edit Schedule Dialog */}
             <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
                 <DialogContent>
                     <DialogHeader>
@@ -267,19 +364,24 @@ const AdminSchedule = () => {
                                 <Label>روز</Label>
                                 <Select
                                     value={String(formData.day_number)}
-                                    onValueChange={(value) => setFormData(prev => ({ 
-                                        ...prev, 
-                                        day_number: parseInt(value),
-                                        day_title: getDayTitle(parseInt(value))
-                                    }))}
+                                    onValueChange={(value) => {
+                                        const day = days.find(d => d.day_number === parseInt(value));
+                                        setFormData(prev => ({ 
+                                            ...prev, 
+                                            day_number: parseInt(value),
+                                            day_title: day?.day_title || ''
+                                        }));
+                                    }}
                                 >
                                     <SelectTrigger>
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="1">روز اول</SelectItem>
-                                        <SelectItem value="2">روز دوم</SelectItem>
-                                        <SelectItem value="3">روز سوم</SelectItem>
+                                        {days.map((day) => (
+                                            <SelectItem key={day.day_number} value={String(day.day_number)}>
+                                                {day.day_title}
+                                            </SelectItem>
+                                        ))}
                                     </SelectContent>
                                 </Select>
                             </div>
