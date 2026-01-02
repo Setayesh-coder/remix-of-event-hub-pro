@@ -59,6 +59,16 @@ interface UserCourse {
   course: Course;
 }
 
+interface Proposal {
+  id: string;
+  file_name: string;
+  file_url: string;
+  uploaded_at: string;
+  status: 'pending_upload' | 'pending_approval' | 'approved' | 'rejected';
+  user_id?: string;        // اختیاری، چون فقط از دیتابیس میاد
+  template_url?: string;   // اختیاری، چون ممکنه باشه
+}
+
 const Profile = () => {
   const [activeTab, setActiveTab] = useState<TabId>('personal');
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -162,8 +172,27 @@ const Profile = () => {
       .eq('user_id', user.id)
       .order('uploaded_at', { ascending: false });
 
-    if (!error && data) {
-      setProposals(data);
+    if (error) {
+      console.error('Error fetching proposals:', error);
+      setProposals([]);
+      return;
+    }
+
+    if (data) {
+      // تبدیل ایمن داده‌ها به نوع Proposal
+      const typedProposals: Proposal[] = data.map((item: any) => ({
+        id: item.id,
+        file_name: item.file_name,
+        file_url: item.file_url,
+        uploaded_at: item.uploaded_at,
+        status: item.status as Proposal['status'], // اطمینان از نوع درست
+        user_id: item.user_id,
+        template_url: item.template_url,
+      }));
+
+      setProposals(typedProposals);
+    } else {
+      setProposals([]);
     }
   };
 
@@ -420,6 +449,7 @@ const Profile = () => {
       return;
     }
 
+
     const canvas = document.createElement('canvas');
     canvas.width = 400;
     canvas.height = 250;
@@ -452,7 +482,20 @@ const Profile = () => {
     if (price === 0) return 'رایگان';
     return new Intl.NumberFormat('fa-IR').format(price) + ' تومان';
   };
-
+  const getStatusDisplay = (status: Proposal['status']) => {
+    switch (status) {
+      case 'pending_upload':
+        return { text: 'آپلود نشده', color: 'text-muted-foreground', bg: 'bg-gray-200 dark:bg-gray-800' };
+      case 'pending_approval':
+        return { text: 'در انتظار بررسی', color: 'text-orange-600 dark:text-orange-400', bg: 'bg-orange-100 dark:bg-orange-900/30' };
+      case 'approved':
+        return { text: 'تأیید شده ✅', color: 'text-green-600 dark:text-green-400', bg: 'bg-green-100 dark:bg-green-900/30' };
+      case 'rejected':
+        return { text: 'رد شده ❌', color: 'text-red-600 dark:text-red-400', bg: 'bg-red-100 dark:bg-red-900/30' };
+      default:
+        return { text: 'نامشخص', color: 'text-muted-foreground', bg: 'bg-gray-200 dark:bg-gray-800' };
+    }
+  };
   if (loading) {
     return (
       <Layout>
@@ -741,12 +784,14 @@ const Profile = () => {
 
             {/* تب پروپوزال */}
             {activeTab === 'proposal' && (
-              <div className="relative rounded-xl p-6 bg-card shadow-xl overflow-hidden border border-border/50 space-y-6">
+              <div className="relative rounded-xl p-6 bg-card shadow-xl overflow-hidden border border-border/50 space-y-8">
                 <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-accent/5 pointer-events-none" />
                 <div className="relative z-10">
-                  <h2 className="text-xl font-semibold">پروپوزال من</h2>
-                  <div className="mt-6 p-4 bg-secondary/50 rounded-xl border border-border">
-                    <h3 className="font-medium mb-3 flex items-center gap-2">
+                  <h2 className="text-xl font-semibold mb-6">پروپوزال من</h2>
+
+                  {/* ویدیو آموزشی */}
+                  <div className="p-5 bg-secondary/50 rounded-xl border border-border">
+                    <h3 className="font-medium mb-4 flex items-center gap-2">
                       <svg className="w-5 h-5 text-primary" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M9.5 16.5L15.5 12L9.5 7.5V16.5Z" fill="currentColor" />
                         <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="currentColor" strokeWidth="2" />
@@ -766,13 +811,15 @@ const Profile = () => {
                     </p>
                   </div>
 
-                  <div className="flex gap-4 flex-wrap mt-6">
+                  {/* دکمه‌های دانلود قالب و آپلود */}
+                  <div className="flex flex-wrap gap-4 pt-10">
                     <Button variant="outline" asChild className="gap-2">
                       <a href="/proposal-template.pdf" download>
                         <Download className="w-4 h-4" />
                         دانلود فرم پروپوزال
                       </a>
                     </Button>
+
                     <input
                       type="file"
                       ref={fileInputRef}
@@ -791,30 +838,70 @@ const Profile = () => {
                     </Button>
                   </div>
 
-                  {proposals.length > 0 && (
-                    <div className="space-y-3 mt-6">
-                      <h3 className="font-medium">فایل‌های آپلود شده:</h3>
-                      {proposals.map((proposal) => (
-                        <div key={proposal.id} className="flex items-center justify-between p-4 bg-secondary rounded-lg">
-                          <div className="flex items-center gap-3">
-                            <FileText className="w-5 h-5 text-primary" />
-                            <span className="text-sm">{proposal.file_name}</span>
+                  {/* نمایش وضعیت پروپوزال‌ها */}
+                  {proposals.length === 0 ? (
+                    <div className="mt-8 p-8 bg-secondary/30 rounded-xl text-center border border-dashed border-border">
+                      <FileText className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                      <p className="text-muted-foreground">
+                        هنوز هیچ پروپوزالی آپلود نکرده‌اید.
+                      </p>
+                      <p className="text-sm text-muted-foreground mt-2">
+                        پس از آپلود، وضعیت بررسی پروپوزال شما اینجا نمایش داده خواهد شد.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="mt-8 space-y-4">
+                      <h3 className="font-medium text-lg">پروپوزال‌های ارسال شده</h3>
+                      {proposals.map((proposal) => {
+                        const statusInfo = getStatusDisplay(proposal.status);
+
+                        return (
+                          <div
+                            key={proposal.id}
+                            className="flex flex-col sm:flex-row sm:items-center justify-between p-5 bg-secondary rounded-xl gap-4 border border-border/50"
+                          >
+                            <div className="flex items-center gap-4 flex-1">
+                              <FileText className="w-8 h-8 text-primary flex-shrink-0" />
+                              <div>
+                                <p className="font-medium">{proposal.file_name}</p>
+                                <p className="text-sm text-muted-foreground">
+                                  آپلود شده در: {new Date(proposal.uploaded_at).toLocaleDateString('fa-IR')}
+                                </p>
+                              </div>
+                            </div>
+
+                            <div className="flex items-center gap-3 flex-wrap">
+                              {/* وضعیت */}
+                              <span
+                                className={`px-4 py-2 rounded-full text-sm font-medium ${statusInfo.bg} ${statusInfo.color} min-w-32 text-center`}
+                              >
+                                {statusInfo.text}
+                              </span>
+
+                              {/* دانلود فایل */}
+                              <Button variant="outline" size="sm" asChild>
+                                <a href={proposal.file_url} target="_blank" rel="noopener noreferrer">
+                                  <Download className="w-4 h-4" />
+                                </a>
+                              </Button>
+
+                              {/* حذف فقط اگر هنوز در انتظار بررسی باشد */}
+                              {proposal.status === 'pending_approval' && (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => deleteProposal(proposal)}
+                                  className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </Button>
+                              )}
+                            </div>
                           </div>
-                          <div className="flex gap-2">
-                            <Button variant="outline" size="sm" asChild>
-                              <a href={proposal.file_url} download>
-                                <Download className="w-4 h-4" />
-                              </a>
-                            </Button>
-                            <Button variant="outline" size="sm" onClick={() => deleteProposal(proposal)}>
-                              <Trash2 className="w-4 h-4 text-destructive" />
-                            </Button>
-                          </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   )}
-
                 </div>
               </div>
             )}
