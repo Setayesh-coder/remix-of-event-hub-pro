@@ -76,6 +76,7 @@ const Profile = () => {
   const [certificates, setCertificates] = useState<Certificate[]>([]);
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [userCourses, setUserCourses] = useState<UserCourse[]>([]);
+  const [cardImageUrl, setCardImageUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -129,7 +130,20 @@ const Profile = () => {
     fetchCertificates();
     fetchCartItems();
     fetchUserCourses();
+    fetchCardSettings();
   }, [user, navigate]);
+
+  const fetchCardSettings = async () => {
+    const { data } = await supabase
+      .from('card_settings')
+      .select('card_image_url')
+      .limit(1)
+      .maybeSingle();
+    
+    if (data?.card_image_url) {
+      setCardImageUrl(data.card_image_url);
+    }
+  };
 
   const fetchProfile = async () => {
     if (!user) return;
@@ -443,12 +457,11 @@ const Profile = () => {
     setActiveTab('courses');
   };
 
-  const downloadCard = () => {
+  const downloadCard = async () => {
     if (!profile?.full_name || !profile?.phone) {
       toast({ title: 'توجه', description: 'لطفاً ابتدا اطلاعات شخصی را تکمیل کنید', variant: 'destructive' });
       return;
     }
-
 
     const canvas = document.createElement('canvas');
     canvas.width = 400;
@@ -456,26 +469,52 @@ const Profile = () => {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    const gradient = ctx.createLinearGradient(0, 0, 400, 250);
-    gradient.addColorStop(0, '#213b6e');
-    gradient.addColorStop(1, '#5472d2');
-    ctx.fillStyle = gradient;
-    ctx.roundRect(0, 0, 400, 250, 20);
-    ctx.fill();
+    // If custom card image exists, use it as background
+    if (cardImageUrl) {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = () => {
+        ctx.drawImage(img, 0, 0, 400, 250);
+        
+        // Add user info on top of image
+        ctx.fillStyle = '#ffffff';
+        ctx.font = '18px Vazirmatn, sans-serif';
+        ctx.textAlign = 'right';
+        ctx.shadowColor = 'rgba(0,0,0,0.5)';
+        ctx.shadowBlur = 4;
+        ctx.fillText(`نام: ${profile.full_name}`, 380, 200);
+        ctx.fillText(`تماس: ${profile.phone}`, 380, 230);
 
-    ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 24px Vazirmatn, sans-serif';
-    ctx.textAlign = 'right';
-    ctx.fillText('کارت شرکت‌کننده', 380, 50);
-    ctx.font = '18px Vazirmatn, sans-serif';
-    ctx.fillText(`نام: ${profile.full_name}`, 380, 120);
-    ctx.fillText(`تماس: ${profile.phone}`, 380, 160);
+        const link = document.createElement('a');
+        link.download = 'participant-card.png';
+        link.href = canvas.toDataURL();
+        link.click();
+        toast({ title: 'موفق', description: 'کارت دانلود شد' });
+      };
+      img.src = cardImageUrl;
+    } else {
+      // Default gradient card
+      const gradient = ctx.createLinearGradient(0, 0, 400, 250);
+      gradient.addColorStop(0, '#213b6e');
+      gradient.addColorStop(1, '#5472d2');
+      ctx.fillStyle = gradient;
+      ctx.roundRect(0, 0, 400, 250, 20);
+      ctx.fill();
 
-    const link = document.createElement('a');
-    link.download = 'participant-card.png';
-    link.href = canvas.toDataURL();
-    link.click();
-    toast({ title: 'موفق', description: 'کارت دانلود شد' });
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 24px Vazirmatn, sans-serif';
+      ctx.textAlign = 'right';
+      ctx.fillText('کارت شرکت‌کننده', 380, 50);
+      ctx.font = '18px Vazirmatn, sans-serif';
+      ctx.fillText(`نام: ${profile.full_name}`, 380, 120);
+      ctx.fillText(`تماس: ${profile.phone}`, 380, 160);
+
+      const link = document.createElement('a');
+      link.download = 'participant-card.png';
+      link.href = canvas.toDataURL();
+      link.click();
+      toast({ title: 'موفق', description: 'کارت دانلود شد' });
+    }
   };
 
   const formatPrice = (price: number) => {
@@ -769,11 +808,27 @@ const Profile = () => {
                 <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-accent/5 pointer-events-none" />
                 <div className="relative z-10">
                   <h2 className="text-xl font-semibold">دریافت کارت شرکت‌کننده</h2>
-                  <div className="bg-gradient-to-br from-primary to-accent rounded-xl p-6 text-white max-w-sm mt-4">
-                    <h3 className="text-lg font-bold mb-4">کارت شرکت‌کننده</h3>
-                    <p className="mb-2">نام: {profile?.full_name || '---'}</p>
-                    <p>تماس: {profile?.phone || '---'}</p>
-                  </div>
+                  
+                  {cardImageUrl ? (
+                    <div className="relative max-w-sm mt-4">
+                      <img 
+                        src={cardImageUrl} 
+                        alt="کارت شرکت‌کننده" 
+                        className="rounded-xl w-full"
+                      />
+                      <div className="absolute bottom-4 right-4 text-white text-shadow">
+                        <p className="mb-1">نام: {profile?.full_name || '---'}</p>
+                        <p>تماس: {profile?.phone || '---'}</p>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="bg-gradient-to-br from-primary to-accent rounded-xl p-6 text-white max-w-sm mt-4">
+                      <h3 className="text-lg font-bold mb-4">کارت شرکت‌کننده</h3>
+                      <p className="mb-2">نام: {profile?.full_name || '---'}</p>
+                      <p>تماس: {profile?.phone || '---'}</p>
+                    </div>
+                  )}
+                  
                   <Button variant="gradient" onClick={downloadCard} className="gap-2 mt-4">
                     <Download className="w-4 h-4" />
                     دانلود کارت
