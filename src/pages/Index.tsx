@@ -169,7 +169,7 @@ const Index = () => {
                   blurIntensity="md"
                   glowIntensity="xs"
                   borderRadius="50%"
-                  className="h-10 w-10 sm:h-12 sm:w-12 md:h-14 md:w-14 lg:h-16 lg:w-16"
+                  className="h-12 w-12 sm:h-14 sm:w-14 md:h-16 md:w-16 lg:h-18 lg:w-18"
                   draggable={false}
                 >
                   <div className="h-full w-full rounded-full bg-white/10">
