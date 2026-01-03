@@ -203,7 +203,7 @@ const AdminIndex = () => {
                             id="hero_description"
                             value={settings.hero_description}
                             onChange={(e) => setSettings(prev => ({ ...prev, hero_description: e.target.value }))}
-                            placeholder="توضیحات صفحه اصلی"
+                            placeholder="SORAYA PROBLEM DRIVEN EVENT"
                             rows={3}
                         />
                     </div>
@@ -213,9 +213,9 @@ const AdminIndex = () => {
                         <Label>تصویر پس‌زمینه</Label>
                         {settings.hero_background && (
                             <div className="relative w-full h-40 rounded-lg overflow-hidden bg-muted mb-2">
-                                <img 
-                                    src={settings.hero_background} 
-                                    alt="پس‌زمینه فعلی" 
+                                <img
+                                    src={settings.hero_background}
+                                    alt="پس‌زمینه فعلی"
                                     className="w-full h-full object-cover"
                                 />
                             </div>
@@ -239,9 +239,9 @@ const AdminIndex = () => {
                             id="countdown_target"
                             type="datetime-local"
                             value={settings.countdown_target ? settings.countdown_target.slice(0, 16) : ''}
-                            onChange={(e) => setSettings(prev => ({ 
-                                ...prev, 
-                                countdown_target: new Date(e.target.value).toISOString() 
+                            onChange={(e) => setSettings(prev => ({
+                                ...prev,
+                                countdown_target: new Date(e.target.value).toISOString()
                             }))}
                         />
                     </div>
@@ -252,7 +252,7 @@ const AdminIndex = () => {
                             <Image className="h-4 w-4" />
                             لوگوهای اسپانسر
                         </Label>
-                        
+
                         <div className="grid grid-cols-4 gap-4">
                             {settings.logos.map((logo, index) => (
                                 <div key={index} className="relative group">

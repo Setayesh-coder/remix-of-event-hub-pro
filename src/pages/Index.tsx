@@ -18,7 +18,7 @@ interface SiteSettings {
 const Index = () => {
   const [settings, setSettings] = useState<SiteSettings>({
     hero_title: 'جوانه ثریا',
-    hero_description: 'جهت ثبت‌نام در رویداد لطفا کلیک کنید.',
+    hero_description: 'JAVANEH SORAYA PROBLEM DRIVEN EVENT',
     hero_background: 'https://wallpaperswide.com/download/breathtaking_nature-wallpaper-1920x1080.jpg',
     countdown_target: '2026-01-15T23:59:59',
     logos: ['/images/logos/logo1.png', '/images/logos/logo2.png', '/images/logos/logo3.png', '/images/logos/logo4.png'],
@@ -89,11 +89,9 @@ const Index = () => {
                     {settings.hero_title.split(' ')[0]}<span className="block text-4xl md:text-6xl lg:text-7xl opacity-80">{settings.hero_title.split(' ').slice(1).join(' ')}</span>
                   </h1>
                   <div className="text-4xl md:text-6xl lg:text-7xl font-bold text-white/90 space-y-2 opacity-80 leading-tight">
-                    <p className="text-5xl md:text-4xl lg:text-4xl">JAVANEH
-                      SORAYA
-                      PROBLEM
-                      DRIVEN
-                      EVENT</p>
+                    <p className="text-5xl md:text-4xl lg:text-4xl">
+
+                      {settings.hero_description}</p>
                   </div>
                 </div>
                 {/* تایمر  */}
@@ -116,7 +114,7 @@ const Index = () => {
                   </LiquidGlassCard>
                 </div>
                 <p className="text-lg md:text-xl lg:text-2xl text-white/80 leading-relaxed px-4">
-                  {settings.hero_description}
+                  جهت ثبت‌نام در رویداد لطفا کلیک کنید.
                 </p>
 
                 {/* دکمه‌ها*/}

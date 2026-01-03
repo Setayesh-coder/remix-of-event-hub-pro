@@ -65,8 +65,8 @@ interface Proposal {
   file_url: string;
   uploaded_at: string;
   status: 'pending_upload' | 'pending_approval' | 'approved' | 'rejected';
-  user_id?: string;        // اختیاری، چون فقط از دیتابیس میاد
-  template_url?: string;   // اختیاری، چون ممکنه باشه
+  user_id?: string;
+  template_url?: string;
 }
 
 const Profile = () => {
@@ -96,7 +96,7 @@ const Profile = () => {
 
   ];
 
-  // تابع اعتبارسنجی کد ملی ایرانی
+
   const validateNationalId = (nationalId: string): boolean => {
     const trimmed = nationalId.trim();
     if (trimmed.length !== 10) return false;
@@ -113,7 +113,7 @@ const Profile = () => {
     return remainder < 2 ? checkDigit === remainder : checkDigit === 11 - remainder;
   };
 
-  // تابع اعتبارسنجی شماره تماس ایرانی
+
   const validatePhone = (phone: string): boolean => {
     const trimmed = phone.trim();
     return /^09\d{9}$/.test(trimmed);
@@ -179,13 +179,13 @@ const Profile = () => {
     }
 
     if (data) {
-      // تبدیل ایمن داده‌ها به نوع Proposal
+
       const typedProposals: Proposal[] = data.map((item: any) => ({
         id: item.id,
         file_name: item.file_name,
         file_url: item.file_url,
         uploaded_at: item.uploaded_at,
-        status: item.status as Proposal['status'], // اطمینان از نوع درست
+        status: item.status as Proposal['status'],
         user_id: item.user_id,
         template_url: item.template_url,
       }));
