@@ -66,7 +66,7 @@ const Index = () => {
   return (
     <Layout>
       {/* Hero Section */}
-      <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
+      <section className="relative h-screen flex items-center justify-center overflow-hidden">
         {/* Background Image + Overlay */}
         <div
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
@@ -77,25 +77,26 @@ const Index = () => {
           <div className="absolute inset-0 bg-black/60" />
         </div>
 
+        <div className="relative z-10 w-full h-full flex flex-col justify-center">
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div className="flex flex-col items-center justify-center gap-4 md:gap-6 lg:gap-8 max-w-7xl mx-auto">
 
-        <div className="relative z-10 w-full">
-          <div className="container mx-auto px-6 lg:px-8">
-            <div className="flex flex-col items-center justify-center gap-12 lg:gap-20 max-w-7xl mx-auto">
-
-              <div className="text-center space-y-10 max-w-xl">
+              <div className="text-center space-y-3 md:space-y-5 lg:space-y-6 max-w-xl">
                 {/* عنوان اصلی */}
-                <div className="space-y-6">
-                  <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold text-white tracking-wider opacity-90 leading-tight">
-                    {settings.hero_title.split(' ')[0]}<span className="block text-4xl md:text-6xl lg:text-7xl opacity-80">{settings.hero_title.split(' ').slice(1).join(' ')}</span>
+                <div className="space-y-2 md:space-y-4">
+                  <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold text-white tracking-wider opacity-90 leading-tight">
+                    {settings.hero_title.split(' ')[0]}
+                    <span className="block text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl opacity-80">
+                      {settings.hero_title.split(' ').slice(1).join(' ')}
+                    </span>
                   </h1>
-                  <div className="text-4xl md:text-6xl lg:text-7xl font-bold text-white/90 space-y-2 opacity-80 leading-tight">
-                    <p className="text-5xl md:text-4xl lg:text-4xl">
-
-                      {settings.hero_description}</p>
-                  </div>
+                  <p className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-white/90 opacity-80">
+                    {settings.hero_description}
+                  </p>
                 </div>
+
                 {/* تایمر  */}
-                <div className="w-full max-w-xs mx-auto">
+                <div className="w-full max-w-[200px] sm:max-w-[240px] md:max-w-xs mx-auto">
                   <LiquidGlassCard
                     blurIntensity="lg"
                     glowIntensity="md"
@@ -103,23 +104,23 @@ const Index = () => {
                     borderRadius="24px"
                     draggable={false}
                     expandable={false}
-                    className="p-4 md:p-5 backdrop-blur-xl"
+                    className="p-2 sm:p-3 md:p-4 backdrop-blur-xl"
                   >
-                    <div className="text-center space-y-2">
-                      <h3 className="text-xs md:text-sm font-medium text-white/80">
+                    <div className="text-center space-y-1">
+                      <h3 className="text-[10px] sm:text-xs md:text-sm font-medium text-white/80">
                         زمان باقی‌مانده فراخوان
                       </h3>
                       <CountdownTimer targetDate={registrationDeadline} />
                     </div>
                   </LiquidGlassCard>
                 </div>
-                <p className="text-lg md:text-xl lg:text-2xl text-white/80 leading-relaxed px-4">
+
+                <p className="text-sm sm:text-base md:text-lg text-white/80 leading-relaxed px-2">
                   جهت ثبت‌نام در رویداد لطفا کلیک کنید.
                 </p>
 
                 {/* دکمه‌ها*/}
-                <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
-
+                <div className="flex flex-row gap-3 sm:gap-4 md:gap-6 justify-center items-center">
                   <Link to="/courses" className="inline-block">
                     <LiquidGlassCard
                       blurIntensity="xl"
@@ -129,8 +130,8 @@ const Index = () => {
                       draggable={false}
                     >
                       <Button
-                        size="lg"
-                        className="px-10 py-7 text-lg font-semibold bg-transparent border-0 text-white"
+                        size="sm"
+                        className="px-4 sm:px-6 md:px-8 py-2 sm:py-4 md:py-5 text-sm sm:text-base md:text-lg font-semibold bg-transparent border-0 text-white"
                       >
                         <span className="relative z-10 text-white">دوره‌ها</span>
                       </Button>
@@ -147,37 +148,42 @@ const Index = () => {
                       className="border border-white/30"
                     >
                       <Button
-                        size="lg"
+                        size="sm"
                         variant="outline"
-                        className="px-10 py-7 text-lg font-semibold bg-transparent border-0 text-white hover:bg-white/10"
+                        className="px-4 sm:px-6 md:px-8 py-2 sm:py-4 md:py-5 text-sm sm:text-base md:text-lg font-semibold bg-transparent border-0 text-white hover:bg-white/10"
                       >
-                        <span className="flex items-center gap-2">
+                        <span className="flex items-center gap-1 sm:gap-2">
                           <span className="relative z-10 text-white">ثبت‌ نام</span>
-                          <ArrowLeft className="h-5 w-5 z-10" />
+                          <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5 z-10" />
                         </span>
                       </Button>
                     </LiquidGlassCard>
                   </Link>
+                </div>
+              </div>
 
-                </div></div>
-            </div>
-            {/* لوگوهای اسپانسر */}
-            <div className="flex justify-center gap-8 pt-10 pb-10">
-              {settings.logos.map((logo, i) => (
-                <LiquidGlassCard
-                  key={i}
-                  blurIntensity="md"
-                  glowIntensity="xs"
-                  borderRadius="50%"
-                  className="h-16 w-16"
-                  draggable={false}
-                >
-                  <div className="h-full w-full rounded-full bg-white/10" >
-                    <img src={logo} alt={`Logo${i + 1}`} className="h-full w-full object-contain rounded-full p-2 relative z-10"
-                      draggable={false} />
-                  </div>
-                </LiquidGlassCard>
-              ))}
+              {/* لوگوهای اسپانسر */}
+              <div className="flex justify-center gap-3 sm:gap-4 md:gap-6 lg:gap-8 mt-2 md:mt-4">
+                {settings.logos.map((logo, i) => (
+                  <LiquidGlassCard
+                    key={i}
+                    blurIntensity="md"
+                    glowIntensity="xs"
+                    borderRadius="50%"
+                    className="h-10 w-10 sm:h-12 sm:w-12 md:h-14 md:w-14 lg:h-16 lg:w-16"
+                    draggable={false}
+                  >
+                    <div className="h-full w-full rounded-full bg-white/10">
+                      <img 
+                        src={logo} 
+                        alt={`Logo${i + 1}`} 
+                        className="h-full w-full object-contain rounded-full p-1.5 sm:p-2 relative z-10"
+                        draggable={false} 
+                      />
+                    </div>
+                  </LiquidGlassCard>
+                ))}
+              </div>
             </div>
           </div>
         </div>
