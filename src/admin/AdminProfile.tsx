@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from '@/hooks/use-toast';
-import { User, FileText, Award, CreditCard, ArrowRight, Download, Upload, Eye } from 'lucide-react';
+import { User, FileText, Award, CreditCard, ArrowRight, Download, Upload, Eye, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
@@ -228,12 +228,42 @@ const AdminProfile = () => {
                     .from('card_settings')
                     .update({ card_image_url: publicUrl, updated_at: new Date().toISOString() })
                     .eq('id', cardSettings.id);
+            } else {
+                // Create new card settings if none exists
+                await supabase
+                    .from('card_settings')
+                    .insert({ card_image_url: publicUrl });
             }
 
             toast({ title: 'موفق', description: 'تصویر کارت آپدیت شد' });
             fetchData();
         } catch (error) {
             toast({ title: 'خطا', description: 'خطا در آپلود', variant: 'destructive' });
+        }
+    };
+
+    const deleteCardImage = async () => {
+        if (!cardSettings?.card_image_url) return;
+        
+        try {
+            // Delete from storage
+            const fileName = cardSettings.card_image_url.split('/').pop();
+            if (fileName) {
+                await supabase.storage
+                    .from('admin-uploads')
+                    .remove([fileName]);
+            }
+
+            // Update database
+            await supabase
+                .from('card_settings')
+                .update({ card_image_url: null, updated_at: new Date().toISOString() })
+                .eq('id', cardSettings.id);
+
+            toast({ title: 'موفق', description: 'تصویر کارت حذف شد' });
+            fetchData();
+        } catch (error) {
+            toast({ title: 'خطا', description: 'خطا در حذف تصویر', variant: 'destructive' });
         }
     };
 
@@ -446,11 +476,22 @@ const AdminProfile = () => {
                             <div className="space-y-2">
                                 <Label>تصویر کارت فعلی</Label>
                                 {cardSettings?.card_image_url ? (
-                                    <img
-                                        src={cardSettings.card_image_url}
-                                        alt="کارت شرکت‌کننده"
-                                        className="max-w-md rounded-lg border"
-                                    />
+                                    <div className="space-y-2">
+                                        <img
+                                            src={cardSettings.card_image_url}
+                                            alt="کارت شرکت‌کننده"
+                                            className="max-w-md rounded-lg border"
+                                        />
+                                        <Button
+                                            variant="destructive"
+                                            size="sm"
+                                            onClick={deleteCardImage}
+                                            className="gap-2"
+                                        >
+                                            <Trash2 className="h-4 w-4" />
+                                            حذف تصویر
+                                        </Button>
+                                    </div>
                                 ) : (
                                     <p className="text-muted-foreground">هنوز تصویری آپلود نشده</p>
                                 )}
