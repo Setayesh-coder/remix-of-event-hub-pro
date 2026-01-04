@@ -33,7 +33,7 @@ const Navbar = () => {
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden lg:flex items-center gap-1 pl-10">
+          <div className="hidden lg:flex items-center gap-1 pl-40">
             {navItems.map((item) => (
               <Button key={item.label} variant="ghost" className="text-white hover:bg-white/10 hover:text-white" asChild>
                 <Link to={item.href} className="gap-1">
