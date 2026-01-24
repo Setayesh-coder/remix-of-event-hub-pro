@@ -373,16 +373,16 @@ const Profile = () => {
       return;
     }
 
-    const { data: { publicUrl } } = supabase.storage
-      .from('proposals')
-      .getPublicUrl(fileName);
+    // Store just the file path (not URL) since bucket is private
+    // We'll generate signed URLs when needed for viewing
+    const filePath = fileName;
 
     const { error: dbError } = await supabase
       .from('proposals')
       .insert({
         user_id: user.id,
         file_name: file.name,
-        file_url: publicUrl,
+        file_url: filePath, // Store path, not public URL
       });
 
     if (dbError) {
@@ -396,7 +396,8 @@ const Profile = () => {
 
   const deleteProposal = async (proposal: Proposal) => {
     if (!user) return;
-    const filePath = proposal.file_url.split('/storage/v1/object/public/proposals/')[1];
+    // file_url now stores just the path (e.g., "userId/timestamp-filename.pdf")
+    const filePath = proposal.file_url;
     await supabase.storage.from('proposals').remove([filePath]);
 
     const { error } = await supabase
@@ -407,6 +408,28 @@ const Profile = () => {
     if (!error) {
       toast({ title: 'حذف شد', description: 'فایل با موفقیت حذف شد' });
       fetchProposals();
+    }
+  };
+
+  // Generate signed URL for downloading proposals
+  const getProposalSignedUrl = async (filePath: string): Promise<string | null> => {
+    const { data, error } = await supabase.storage
+      .from('proposals')
+      .createSignedUrl(filePath, 3600); // 1 hour expiry
+    
+    if (error || !data) {
+      console.error('Error creating signed URL:', error);
+      return null;
+    }
+    return data.signedUrl;
+  };
+
+  const handleProposalDownload = async (proposal: Proposal) => {
+    const signedUrl = await getProposalSignedUrl(proposal.file_url);
+    if (signedUrl) {
+      window.open(signedUrl, '_blank');
+    } else {
+      toast({ title: 'خطا', description: 'خطا در دریافت لینک دانلود', variant: 'destructive' });
     }
   };
 
@@ -934,10 +957,12 @@ const Profile = () => {
                               </span>
 
                               {/* دانلود فایل */}
-                              <Button variant="outline" size="sm" asChild>
-                                <a href={proposal.file_url} target="_blank" rel="noopener noreferrer">
-                                  <Download className="w-4 h-4" />
-                                </a>
+                              <Button 
+                                variant="outline" 
+                                size="sm" 
+                                onClick={() => handleProposalDownload(proposal)}
+                              >
+                                <Download className="w-4 h-4" />
                               </Button>
 
                               {/* حذف فقط اگر هنوز در انتظار بررسی باشد */}
