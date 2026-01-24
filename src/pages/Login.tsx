@@ -22,7 +22,6 @@ const Login = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('دکمه ورود زده شد!'); // برای تست – بعداً می‌تونی حذف کنی
     setLoading(true);
 
     const { error } = await signIn(email, password);
