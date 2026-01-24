@@ -29,7 +29,6 @@ const Register = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('دکمه ثبت نام زده شد!'); // برای تست – بعداً حذف کن
 
     if (formData.password !== formData.confirmPassword) {
       toast({
