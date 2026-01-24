@@ -356,6 +356,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      validate_national_id: { Args: { id: string }; Returns: boolean }
     }
     Enums: {
       app_role: "admin" | "user"

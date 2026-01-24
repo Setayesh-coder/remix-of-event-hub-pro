@@ -267,6 +267,28 @@ const AdminProfile = () => {
         }
     };
 
+    // Generate signed URL for downloading proposals (private bucket)
+    const getProposalSignedUrl = async (filePath: string): Promise<string | null> => {
+        const { data, error } = await supabase.storage
+            .from('proposals')
+            .createSignedUrl(filePath, 3600); // 1 hour expiry
+        
+        if (error || !data) {
+            console.error('Error creating signed URL:', error);
+            return null;
+        }
+        return data.signedUrl;
+    };
+
+    const handleProposalDownload = async (proposal: Proposal) => {
+        const signedUrl = await getProposalSignedUrl(proposal.file_url);
+        if (signedUrl) {
+            window.open(signedUrl, '_blank');
+        } else {
+            toast({ title: 'خطا', description: 'خطا در دریافت لینک دانلود', variant: 'destructive' });
+        }
+    };
+
     const getUserName = (userId: string) => {
         const user = users.find(u => u.user_id === userId);
         return user?.full_name || 'کاربر بدون نام';
@@ -386,15 +408,13 @@ const AdminProfile = () => {
                                             </TableCell>
                                             <TableCell>
                                                 <div className="flex items-center gap-2">
-                                                    <a
-                                                        href={proposal.file_url}
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
+                                                    <Button 
+                                                        variant="outline" 
+                                                        size="sm"
+                                                        onClick={() => handleProposalDownload(proposal)}
                                                     >
-                                                        <Button variant="outline" size="sm">
-                                                            <Download className="h-4 w-4" />
-                                                        </Button>
-                                                    </a>
+                                                        <Download className="h-4 w-4" />
+                                                    </Button>
                                                     <Select
                                                         value={proposal.status}
                                                         onValueChange={(value) => updateProposalStatus(proposal.id, value)}
