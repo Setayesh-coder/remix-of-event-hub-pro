@@ -28,7 +28,7 @@ const providers = {
   kavenegar: async (phone, message) => {
     const apiKey = process.env.SMS_API_KEY;
     const url = `https://api.kavenegar.com/v1/${apiKey}/sms/send.json`;
-    
+
     const response = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -38,7 +38,7 @@ const providers = {
         sender: process.env.SMS_SENDER || '10004346'
       })
     });
-    
+
     const data = await response.json();
     if (data.return.status !== 200) {
       throw new Error(data.return.message);
@@ -52,7 +52,7 @@ const providers = {
    */
   melipayamak: async (phone, message) => {
     const url = 'https://rest.payamak-panel.com/api/SendSMS/SendSMS';
-    
+
     const response = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -64,7 +64,7 @@ const providers = {
         text: message
       })
     });
-    
+
     const data = await response.json();
     if (data.RetStatus !== 1) {
       throw new Error(`SMS failed with status: ${data.RetStatus}`);
@@ -78,7 +78,7 @@ const providers = {
    */
   ghasedak: async (phone, message) => {
     const url = 'https://api.ghasedak.me/v2/sms/send/simple';
-    
+
     const response = await fetch(url, {
       method: 'POST',
       headers: {
@@ -91,7 +91,7 @@ const providers = {
         linenumber: process.env.SMS_SENDER
       })
     });
-    
+
     const data = await response.json();
     if (data.result.code !== 200) {
       throw new Error(data.result.message);
@@ -105,7 +105,7 @@ const providers = {
    */
   smsir: async (phone, message) => {
     const url = 'https://api.sms.ir/v1/send';
-    
+
     const response = await fetch(url, {
       method: 'POST',
       headers: {
@@ -118,7 +118,7 @@ const providers = {
         parameters: [{ name: 'CODE', value: message }]
       })
     });
-    
+
     const data = await response.json();
     if (data.status !== 1) {
       throw new Error(data.message);
@@ -135,12 +135,12 @@ const providers = {
  */
 async function sendSMS(phone, message) {
   const provider = process.env.SMS_PROVIDER || 'mock';
-  
+
   if (!providers[provider]) {
     console.warn(`⚠️ Unknown SMS provider: ${provider}, falling back to mock`);
     return providers.mock(phone, message);
   }
-  
+
   try {
     const result = await providers[provider](phone, message);
     console.log(`✅ SMS sent via ${provider} to ${phone}`);
