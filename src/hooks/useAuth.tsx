@@ -6,8 +6,8 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   loading: boolean;
-  signUp: (email: string, password: string) => Promise<{ error: Error | null }>;
-  signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
+  requestOTP: (phone: string) => Promise<{ error: string | null; expiresIn?: number }>;
+  verifyOTP: (phone: string, code: string) => Promise<{ error: string | null; isNewUser?: boolean }>;
   signOut: () => Promise<void>;
 }
 
@@ -36,24 +36,69 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     return () => subscription.unsubscribe();
   }, []);
 
-  const signUp = async (email: string, password: string) => {
-    const redirectUrl = `${window.location.origin}/`;
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: redirectUrl
+  const requestOTP = async (phone: string): Promise<{ error: string | null; expiresIn?: number }> => {
+    try {
+      const { data, error } = await supabase.functions.invoke('request-otp', {
+        body: { phone }
+      });
+
+      if (error) {
+        return { error: error.message };
       }
-    });
-    return { error };
+
+      if (data.error) {
+        return { error: data.error };
+      }
+
+      return { error: null, expiresIn: data.expiresIn };
+    } catch (err) {
+      return { error: 'خطا در ارسال کد تأیید' };
+    }
   };
 
-  const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password
-    });
-    return { error };
+  const verifyOTP = async (phone: string, code: string): Promise<{ error: string | null; isNewUser?: boolean }> => {
+    try {
+      // Step 1: Verify OTP
+      const { data: verifyData, error: verifyError } = await supabase.functions.invoke('verify-otp', {
+        body: { phone, code }
+      });
+
+      if (verifyError) {
+        return { error: verifyError.message };
+      }
+
+      if (verifyData.error) {
+        return { error: verifyData.error };
+      }
+
+      // Step 2: Exchange session token for actual session
+      const { data: sessionData, error: sessionError } = await supabase.functions.invoke('exchange-session', {
+        body: { 
+          sessionToken: verifyData.sessionToken, 
+          userId: verifyData.userId 
+        }
+      });
+
+      if (sessionError) {
+        return { error: sessionError.message };
+      }
+
+      if (sessionData.error) {
+        return { error: sessionData.error };
+      }
+
+      // Step 3: Set the session in Supabase client
+      if (sessionData.session) {
+        await supabase.auth.setSession({
+          access_token: sessionData.session.access_token,
+          refresh_token: sessionData.session.refresh_token,
+        });
+      }
+
+      return { error: null, isNewUser: verifyData.isNewUser };
+    } catch (err) {
+      return { error: 'خطا در تأیید کد' };
+    }
   };
 
   const signOut = async () => {
@@ -61,7 +106,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, loading, signUp, signIn, signOut }}>
+    <AuthContext.Provider value={{ user, session, loading, requestOTP, verifyOTP, signOut }}>
       {children}
     </AuthContext.Provider>
   );
