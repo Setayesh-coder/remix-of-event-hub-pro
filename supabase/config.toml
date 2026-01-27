@@ -8,3 +8,6 @@ verify_jwt = false
 
 [functions.exchange-session]
 verify_jwt = false
+
+[functions.admin-verify-otp]
+verify_jwt = false

@@ -61,6 +61,11 @@ interface CardSettings {
     card_image_url: string | null;
 }
 
+interface CertificateSettings {
+    id: string;
+    certificate_image_url: string | null;
+}
+
 const AdminProfile = () => {
     const navigate = useNavigate();
     const [loading, setLoading] = useState(true);
@@ -68,6 +73,7 @@ const AdminProfile = () => {
     const [proposals, setProposals] = useState<Proposal[]>([]);
     const [certificates, setCertificates] = useState<Certificate[]>([]);
     const [cardSettings, setCardSettings] = useState<CardSettings | null>(null);
+    const [certificateSettings, setCertificateSettings] = useState<CertificateSettings | null>(null);
 
     // Dialog states
     const [certDialogOpen, setCertDialogOpen] = useState(false);
@@ -84,17 +90,19 @@ const AdminProfile = () => {
     }, []);
 
     const fetchData = async () => {
-        const [usersRes, proposalsRes, certsRes, cardRes] = await Promise.all([
+        const [usersRes, proposalsRes, certsRes, cardRes, certSettingsRes] = await Promise.all([
             supabase.from('profiles').select('id, user_id, full_name, phone, national_id'),
             supabase.from('proposals').select('*').order('uploaded_at', { ascending: false }),
             supabase.from('certificates').select('*').order('issued_at', { ascending: false }),
             supabase.from('card_settings').select('*').limit(1).maybeSingle(),
+            supabase.from('certificate_settings').select('*').limit(1).maybeSingle(),
         ]);
 
         if (usersRes.data) setUsers(usersRes.data);
         if (proposalsRes.data) setProposals(proposalsRes.data);
         if (certsRes.data) setCertificates(certsRes.data);
         if (cardRes.data) setCardSettings(cardRes.data);
+        if (certSettingsRes.data) setCertificateSettings(certSettingsRes.data);
 
         setLoading(false);
     };
@@ -267,6 +275,62 @@ const AdminProfile = () => {
         }
     };
 
+    const updateCertificateImage = async (file: File) => {
+        try {
+            const fileExt = file.name.split('.').pop();
+            const fileName = `certificate-background.${fileExt}`;
+
+            const { error: uploadError } = await supabase.storage
+                .from('admin-uploads')
+                .upload(fileName, file, { upsert: true });
+
+            if (uploadError) throw uploadError;
+
+            const { data: { publicUrl } } = supabase.storage
+                .from('admin-uploads')
+                .getPublicUrl(fileName);
+
+            if (certificateSettings) {
+                await supabase
+                    .from('certificate_settings')
+                    .update({ certificate_image_url: publicUrl, updated_at: new Date().toISOString() })
+                    .eq('id', certificateSettings.id);
+            } else {
+                await supabase
+                    .from('certificate_settings')
+                    .insert({ certificate_image_url: publicUrl });
+            }
+
+            toast({ title: 'موفق', description: 'تصویر گواهی آپدیت شد' });
+            fetchData();
+        } catch (error) {
+            toast({ title: 'خطا', description: 'خطا در آپلود', variant: 'destructive' });
+        }
+    };
+
+    const deleteCertificateImage = async () => {
+        if (!certificateSettings?.certificate_image_url) return;
+        
+        try {
+            const fileName = certificateSettings.certificate_image_url.split('/').pop();
+            if (fileName) {
+                await supabase.storage
+                    .from('admin-uploads')
+                    .remove([fileName]);
+            }
+
+            await supabase
+                .from('certificate_settings')
+                .update({ certificate_image_url: null, updated_at: new Date().toISOString() })
+                .eq('id', certificateSettings.id);
+
+            toast({ title: 'موفق', description: 'تصویر گواهی حذف شد' });
+            fetchData();
+        } catch (error) {
+            toast({ title: 'خطا', description: 'خطا در حذف تصویر', variant: 'destructive' });
+        }
+    };
+
     // Generate signed URL for downloading proposals (private bucket)
     const getProposalSignedUrl = async (filePath: string): Promise<string | null> => {
         const { data, error } = await supabase.storage
@@ -308,7 +372,7 @@ const AdminProfile = () => {
             </div>
 
             <Tabs defaultValue="users">
-                <TabsList className="grid w-full grid-cols-4">
+                <TabsList className="grid w-full grid-cols-5">
                     <TabsTrigger value="users" className="gap-2">
                         <User className="h-4 w-4" />
                         کاربران
@@ -324,6 +388,10 @@ const AdminProfile = () => {
                     <TabsTrigger value="card" className="gap-2">
                         <CreditCard className="h-4 w-4" />
                         کارت
+                    </TabsTrigger>
+                    <TabsTrigger value="cert-settings" className="gap-2">
+                        <Award className="h-4 w-4" />
+                        تنظیمات گواهی
                     </TabsTrigger>
                 </TabsList>
 
@@ -527,6 +595,55 @@ const AdminProfile = () => {
                                         if (file) updateCardImage(file);
                                     }}
                                 />
+                            </div>
+                        </CardContent>
+                    </Card>
+                </TabsContent>
+
+                {/* تنظیمات گواهی */}
+                <TabsContent value="cert-settings">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>تنظیمات پس‌زمینه گواهی</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            <div className="space-y-2">
+                                <Label>تصویر پس‌زمینه گواهی فعلی</Label>
+                                {certificateSettings?.certificate_image_url ? (
+                                    <div className="space-y-2">
+                                        <img
+                                            src={certificateSettings.certificate_image_url}
+                                            alt="پس‌زمینه گواهی"
+                                            className="max-w-md rounded-lg border"
+                                        />
+                                        <Button
+                                            variant="destructive"
+                                            size="sm"
+                                            onClick={deleteCertificateImage}
+                                            className="gap-2"
+                                        >
+                                            <Trash2 className="h-4 w-4" />
+                                            حذف تصویر
+                                        </Button>
+                                    </div>
+                                ) : (
+                                    <p className="text-muted-foreground">هنوز تصویری آپلود نشده</p>
+                                )}
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label>آپلود تصویر جدید</Label>
+                                <Input
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={(e) => {
+                                        const file = e.target.files?.[0];
+                                        if (file) updateCertificateImage(file);
+                                    }}
+                                />
+                                <p className="text-sm text-muted-foreground">
+                                    توصیه: تصویر با ابعاد 800x600 پیکسل برای بهترین نتیجه
+                                </p>
                             </div>
                         </CardContent>
                     </Card>
