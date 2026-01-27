@@ -5,7 +5,7 @@ const Footer = () => {
   return (
     <footer className="relative bg-primary border-t border-primary/80 mt-auto">
       {/* Fade effect at the top of footer */}
-      <div className="absolute top-0 left-0 right-0 h-16 bg-gradient-to-b from-background to-transparent -translate-y-full pointer-events-none" />
+      <div className="absolute top-0 left-0 right-0 h-16 bg-gradient-to-t from-[hsl(220_54.17%_28.24%)] to-transparent -translate-y-full pointer-events-none " />
       <div className="container mx-auto px-4 py-12">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {/* Brand */}
