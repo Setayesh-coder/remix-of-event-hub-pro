@@ -77,6 +77,7 @@ const Profile = () => {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [userCourses, setUserCourses] = useState<UserCourse[]>([]);
   const [cardImageUrl, setCardImageUrl] = useState<string | null>(null);
+  const [certificateImageUrl, setCertificateImageUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -131,6 +132,7 @@ const Profile = () => {
     fetchCartItems();
     fetchUserCourses();
     fetchCardSettings();
+    fetchCertificateSettings();
   }, [user, navigate]);
 
   const fetchCardSettings = async () => {
@@ -142,6 +144,18 @@ const Profile = () => {
     
     if (data?.card_image_url) {
       setCardImageUrl(data.card_image_url);
+    }
+  };
+
+  const fetchCertificateSettings = async () => {
+    const { data } = await supabase
+      .from('certificate_settings')
+      .select('certificate_image_url')
+      .limit(1)
+      .maybeSingle();
+    
+    if (data?.certificate_image_url) {
+      setCertificateImageUrl(data.certificate_image_url);
     }
   };
 
@@ -447,6 +461,84 @@ const Profile = () => {
 
   const getCartTotal = () => {
     return cartItems.reduce((total, item) => total + (item.course?.price || 0), 0);
+  };
+
+  const getCartTax = () => {
+    return Math.round(getCartTotal() * 0.1); // 10% tax
+  };
+
+  const getCartTotalWithTax = () => {
+    return getCartTotal() + getCartTax();
+  };
+
+  // Download certificate with custom background
+  const downloadCertificate = async (cert: Certificate) => {
+    if (!profile?.full_name) {
+      toast({ title: 'توجه', description: 'لطفاً ابتدا اطلاعات شخصی را تکمیل کنید', variant: 'destructive' });
+      return;
+    }
+
+    const canvas = document.createElement('canvas');
+    canvas.width = 800;
+    canvas.height = 600;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    if (certificateImageUrl) {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = () => {
+        ctx.drawImage(img, 0, 0, 800, 600);
+        
+        // Add certificate info
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 32px Vazirmatn, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.shadowColor = 'rgba(0,0,0,0.5)';
+        ctx.shadowBlur = 4;
+        ctx.fillText(cert.title, 400, 280);
+        ctx.font = '24px Vazirmatn, sans-serif';
+        ctx.fillText(`به نام: ${profile.full_name}`, 400, 340);
+        ctx.font = '18px Vazirmatn, sans-serif';
+        ctx.fillText(`تاریخ صدور: ${new Date(cert.issued_at).toLocaleDateString('fa-IR')}`, 400, 400);
+
+        const link = document.createElement('a');
+        link.download = `certificate-${cert.title}.png`;
+        link.href = canvas.toDataURL();
+        link.click();
+        toast({ title: 'موفق', description: 'گواهی دانلود شد' });
+      };
+      img.src = certificateImageUrl;
+    } else {
+      // Default gradient certificate
+      const gradient = ctx.createLinearGradient(0, 0, 800, 600);
+      gradient.addColorStop(0, '#213b6e');
+      gradient.addColorStop(1, '#5472d2');
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, 800, 600);
+
+      // Border
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 4;
+      ctx.strokeRect(20, 20, 760, 560);
+
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 36px Vazirmatn, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('گواهی‌نامه', 400, 100);
+      ctx.font = 'bold 28px Vazirmatn, sans-serif';
+      ctx.fillText(cert.title, 400, 200);
+      ctx.font = '22px Vazirmatn, sans-serif';
+      ctx.fillText(`به نام: ${profile.full_name}`, 400, 300);
+      ctx.font = '18px Vazirmatn, sans-serif';
+      ctx.fillText(`تاریخ صدور: ${new Date(cert.issued_at).toLocaleDateString('fa-IR')}`, 400, 380);
+
+      const link = document.createElement('a');
+      link.download = `certificate-${cert.title}.png`;
+      link.href = canvas.toDataURL();
+      link.click();
+      toast({ title: 'موفق', description: 'گواهی دانلود شد' });
+    }
   };
 
   const handlePayment = async () => {
@@ -770,16 +862,24 @@ const Profile = () => {
                         </div>
                       ))}
 
-                      <div className="border-t border-border pt-4 mt-4">
-                        <div className="flex items-center justify-between mb-4">
+                      <div className="border-t border-border pt-4 mt-4 space-y-2">
+                        <div className="flex items-center justify-between text-muted-foreground">
+                          <span>جمع خرید:</span>
+                          <span>{formatPrice(getCartTotal())}</span>
+                        </div>
+                        <div className="flex items-center justify-between text-muted-foreground">
+                          <span>مالیات (۱۰٪):</span>
+                          <span>{formatPrice(getCartTax())}</span>
+                        </div>
+                        <div className="flex items-center justify-between pt-2 border-t border-border">
                           <span className="text-lg font-semibold">جمع کل:</span>
                           <span className="text-2xl font-bold text-primary">
-                            {formatPrice(getCartTotal())}
+                            {formatPrice(getCartTotalWithTax())}
                           </span>
                         </div>
                         <Button
                           variant="gradient"
-                          className="w-full"
+                          className="w-full mt-4"
                           onClick={handlePayment}
                           disabled={processing}
                         >
@@ -1007,13 +1107,15 @@ const Profile = () => {
                               </p>
                             </div>
                           </div>
-                          {cert.certificate_url && (
-                            <Button variant="outline" size="sm" asChild>
-                              <a href={cert.certificate_url} download>
-                                <Download className="w-4 h-4" />
-                              </a>
-                            </Button>
-                          )}
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            onClick={() => downloadCertificate(cert)}
+                            className="gap-2"
+                          >
+                            <Download className="w-4 h-4" />
+                            دانلود گواهی
+                          </Button>
                         </div>
                       ))}
                     </div>

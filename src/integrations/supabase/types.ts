@@ -61,6 +61,24 @@ export type Database = {
           },
         ]
       }
+      certificate_settings: {
+        Row: {
+          certificate_image_url: string | null
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          certificate_image_url?: string | null
+          id?: string
+          updated_at?: string
+        }
+        Update: {
+          certificate_image_url?: string | null
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       certificates: {
         Row: {
           certificate_url: string | null
