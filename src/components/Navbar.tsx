@@ -26,7 +26,7 @@ const Navbar = () => {
           {/* Logo */}
           <Link to="https://microinnovate.ir/" className="flex items-center gap-2">
 
-            <img className="w-20 h-20 rounded-lg flex items-center justify-center" src="/images/مرکز تحقیقات اپتوالکترونیک.png" alt="ME" />
+            <img className="w-20 h-20 rounded-lg flex items-center justify-center" src="/images/micro.png" alt="ME" />
 
 
             <span className="hidden sm:block text-lg font-bold text-white">میکروالکترونیک</span>

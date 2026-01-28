@@ -19,7 +19,7 @@ const Index = () => {
   const [settings, setSettings] = useState<SiteSettings>({
     hero_title: 'جوانه ثریا',
     hero_description: 'JAVANEH SORAYA PROBLEM DRIVEN EVENT',
-    hero_background: 'https://wallpaperswide.com/download/breathtaking_nature-wallpaper-1920x1080.jpg',
+    hero_background: '/images/background.jpg',
     countdown_target: '2026-01-15T23:59:59',
     logos: ['/images/logos/logo1.png', '/images/logos/logo2.png', '/images/logos/logo3.png', '/images/logos/logo4.png'],
   });
