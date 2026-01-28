@@ -11,3 +11,6 @@ verify_jwt = false
 
 [functions.admin-verify-otp]
 verify_jwt = false
+
+[functions.create-test-admin]
+verify_jwt = false
