@@ -71,6 +71,24 @@ Deno.serve(async (req) => {
       );
     }
 
+    // Check if in development mode (no SMS sending)
+    const isDev = Deno.env.get("DEV_MODE") === "true";
+    
+    if (isDev) {
+      // In development mode, just log the OTP
+      console.log(`📱 [DEV MODE] OTP for ${phone}: ${otp}`);
+      return new Response(
+        JSON.stringify({ 
+          success: true, 
+          message: "کد تأیید ارسال شد",
+          expiresIn: 300,
+          // Only include OTP in dev mode for testing
+          devOtp: otp
+        }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     // Send OTP via IPPanel SMS
     const apiKey = Deno.env.get("IPPANEL_API_KEY");
     if (!apiKey) {
@@ -110,7 +128,7 @@ Deno.serve(async (req) => {
       JSON.stringify({ 
         success: true, 
         message: "کد تأیید ارسال شد",
-        expiresIn: 300 // 5 minutes in seconds
+        expiresIn: 300
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
