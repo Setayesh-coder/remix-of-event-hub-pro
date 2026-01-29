@@ -6,7 +6,7 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   loading: boolean;
-  requestOTP: (phone: string) => Promise<{ error: string | null; expiresIn?: number }>;
+  requestOTP: (phone: string) => Promise<{ error: string | null; expiresIn?: number; devOtp?: string }>;
   verifyOTP: (phone: string, code: string) => Promise<{ error: string | null; isNewUser?: boolean }>;
   signOut: () => Promise<void>;
 }
@@ -36,22 +36,29 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     return () => subscription.unsubscribe();
   }, []);
 
-  const requestOTP = async (phone: string): Promise<{ error: string | null; expiresIn?: number }> => {
+  const requestOTP = async (phone: string): Promise<{ error: string | null; expiresIn?: number; devOtp?: string }> => {
     try {
       const { data, error } = await supabase.functions.invoke('request-otp', {
         body: { phone }
       });
 
       if (error) {
+        console.error('Request OTP error:', error);
         return { error: error.message };
       }
 
-      if (data.error) {
+      if (data?.error) {
         return { error: data.error };
       }
 
-      return { error: null, expiresIn: data.expiresIn };
+      // Return devOtp if in development mode for testing
+      if (data?.devOtp) {
+        console.log('📱 [DEV MODE] OTP received:', data.devOtp);
+      }
+
+      return { error: null, expiresIn: data?.expiresIn || 300, devOtp: data?.devOtp };
     } catch (err) {
+      console.error('Request OTP error:', err);
       return { error: 'خطا در ارسال کد تأیید' };
     }
   };

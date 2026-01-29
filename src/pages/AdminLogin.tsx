@@ -67,7 +67,17 @@ const AdminLogin = () => {
             if (invokeError) throw invokeError;
 
             if (data?.success) {
-                toast({ title: 'کد تأیید ارسال شد', description: 'کد را وارد کنید' });
+                // Show dev OTP if available
+                if (data?.devOtp) {
+                    toast({ 
+                        title: '🔧 حالت توسعه', 
+                        description: `کد تأیید: ${data.devOtp}`,
+                        duration: 30000
+                    });
+                    setOtp(data.devOtp); // Auto-fill
+                } else {
+                    toast({ title: 'کد تأیید ارسال شد', description: 'کد را وارد کنید' });
+                }
                 setStep('otp');
                 setCountdown(120);
             } else {

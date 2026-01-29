@@ -43,7 +43,7 @@ const Login = () => {
     }
 
     setLoading(true);
-    const { error, expiresIn } = await requestOTP(phone);
+    const { error, expiresIn, devOtp } = await requestOTP(phone);
     setLoading(false);
 
     if (error) {
@@ -53,10 +53,20 @@ const Login = () => {
         variant: 'destructive'
       });
     } else {
-      toast({
-        title: 'کد ارسال شد',
-        description: 'کد تأیید به شماره شما پیامک شد'
-      });
+      // Show dev OTP in toast if available
+      if (devOtp) {
+        toast({
+          title: '🔧 حالت توسعه',
+          description: `کد تأیید شما: ${devOtp}`,
+          duration: 30000
+        });
+        setOtp(devOtp); // Auto-fill OTP in dev mode
+      } else {
+        toast({
+          title: 'کد ارسال شد',
+          description: 'کد تأیید به شماره شما پیامک شد'
+        });
+      }
       setStep('otp');
       setCountdown(expiresIn || 300);
     }
@@ -97,7 +107,7 @@ const Login = () => {
     if (countdown > 0) return;
     
     setLoading(true);
-    const { error, expiresIn } = await requestOTP(phone);
+    const { error, expiresIn, devOtp } = await requestOTP(phone);
     setLoading(false);
 
     if (error) {
@@ -107,11 +117,19 @@ const Login = () => {
         variant: 'destructive'
       });
     } else {
-      toast({
-        title: 'کد مجدداً ارسال شد',
-        description: 'کد تأیید جدید پیامک شد'
-      });
-      setOtp('');
+      if (devOtp) {
+        toast({
+          title: '🔧 حالت توسعه',
+          description: `کد تأیید شما: ${devOtp}`,
+          duration: 30000
+        });
+        setOtp(devOtp);
+      } else {
+        toast({
+          title: 'کد مجدداً ارسال شد',
+          description: 'کد تأیید جدید پیامک شد'
+        });
+      }
       setCountdown(expiresIn || 300);
     }
   };

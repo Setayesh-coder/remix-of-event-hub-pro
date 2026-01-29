@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { encode as base64Encode } from "https://deno.land/std@0.208.0/encoding/base64.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -10,6 +11,14 @@ interface AdminVerifyRequest {
   phone: string;
   code: string;
   password: string;
+}
+
+// Hash OTP using SHA-256 with base64 encoding (same as request-otp)
+async function hashOTP(otp: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(otp);
+  const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+  return base64Encode(new Uint8Array(hashBuffer));
 }
 
 Deno.serve(async (req) => {
@@ -25,6 +34,8 @@ Deno.serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     const { phone, code, password } = (await req.json()) as AdminVerifyRequest;
+
+    console.log("Admin verify request for phone:", phone);
 
     // Validate input
     if (!phone || !code || !password) {
@@ -42,6 +53,8 @@ Deno.serve(async (req) => {
       normalizedPhone = "0" + normalizedPhone.slice(2);
     }
 
+    console.log("Normalized phone:", normalizedPhone);
+
     // 1. Verify OTP first
     const now = new Date().toISOString();
     const { data: otpRecord, error: otpFetchError } = await supabase
@@ -54,8 +67,16 @@ Deno.serve(async (req) => {
       .limit(1)
       .maybeSingle();
 
-    if (otpFetchError || !otpRecord) {
+    if (otpFetchError) {
       console.error("OTP fetch error:", otpFetchError);
+      return new Response(
+        JSON.stringify({ error: "خطا در بررسی کد تأیید" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    if (!otpRecord) {
+      console.log("No pending OTP found for phone:", normalizedPhone);
       return new Response(
         JSON.stringify({ error: "کد تأیید یافت نشد یا منقضی شده است" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -81,16 +102,16 @@ Deno.serve(async (req) => {
       .update({ attempts: otpRecord.attempts + 1 })
       .eq("id", otpRecord.id);
 
-    // Hash the provided code and compare
-    const encoder = new TextEncoder();
-    const data = encoder.encode(code);
-    const hashBuffer = await crypto.subtle.digest("SHA-256", data);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    const codeHash = hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
+    // Hash the provided code using base64 (matching request-otp)
+    const codeHash = await hashOTP(code);
+    
+    console.log("Code verification - stored hash:", otpRecord.code_hash.substring(0, 20) + "...");
+    console.log("Code verification - computed hash:", codeHash.substring(0, 20) + "...");
 
     if (codeHash !== otpRecord.code_hash) {
+      const remaining = otpRecord.max_attempts - otpRecord.attempts - 1;
       return new Response(
-        JSON.stringify({ error: "کد تأیید نادرست است" }),
+        JSON.stringify({ error: `کد تأیید نادرست است. ${remaining} تلاش باقی مانده.` }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -119,11 +140,14 @@ Deno.serve(async (req) => {
     }
 
     if (!profile) {
+      console.log("No profile found for phone:", normalizedPhone);
       return new Response(
         JSON.stringify({ error: "کاربری با این شماره یافت نشد" }),
         { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
+
+    console.log("Found profile with user_id:", profile.user_id);
 
     // 3. Check if user is admin
     const { data: adminRole, error: roleError } = await supabase
@@ -142,11 +166,14 @@ Deno.serve(async (req) => {
     }
 
     if (!adminRole) {
+      console.log("User is not an admin:", profile.user_id);
       return new Response(
         JSON.stringify({ error: "شما دسترسی ادمین ندارید" }),
         { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
+
+    console.log("User has admin role");
 
     // 4. Get user's email from auth.users
     const { data: authUser, error: authError } = await supabase.auth.admin.getUserById(profile.user_id);
@@ -160,7 +187,6 @@ Deno.serve(async (req) => {
     }
 
     // 5. Verify password using signInWithPassword
-    // First update the password temporarily if needed, then sign in
     const userEmail = authUser.user.email;
 
     if (!userEmail) {
@@ -169,6 +195,8 @@ Deno.serve(async (req) => {
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
+
+    console.log("Attempting sign in for email:", userEmail);
 
     // Create an anonymous client to attempt sign in
     const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
@@ -180,7 +208,7 @@ Deno.serve(async (req) => {
     });
 
     if (signInError) {
-      console.error("Sign in error:", signInError);
+      console.error("Sign in error:", signInError.message);
       return new Response(
         JSON.stringify({ error: "رمز عبور نادرست است" }),
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
