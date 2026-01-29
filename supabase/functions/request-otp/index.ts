@@ -72,7 +72,10 @@ Deno.serve(async (req) => {
     }
 
     // Check if in development mode (no SMS sending)
-    const isDev = Deno.env.get("DEV_MODE") === "true";
+    const devModeValue = Deno.env.get("DEV_MODE");
+    const isDev = devModeValue === "true" || devModeValue === "1" || devModeValue === "yes";
+    
+    console.log(`DEV_MODE check: value="${devModeValue}", isDev=${isDev}`);
     
     if (isDev) {
       // In development mode, just log the OTP
