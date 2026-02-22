@@ -9,6 +9,7 @@ import Courses from "./pages/Courses";
 import Profile from "./pages/Profile";
 import Gallery from "./pages/Gallery";
 import Schedule from "./pages/Schedule";
+import Stats from "./pages/Stats";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import NotFound from "./pages/NotFound";
@@ -42,6 +43,7 @@ const App = () => (
             <Route path="/profile" element={<Profile />} />
             <Route path="/gallery" element={<Gallery />} />
             <Route path="/schedule" element={<Schedule />} />
+            <Route path="/stats" element={<Stats />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="*" element={<NotFound />} />
